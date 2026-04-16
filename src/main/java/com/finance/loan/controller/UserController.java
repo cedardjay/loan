@@ -17,25 +17,34 @@ public class UserController {
     private IUserService userService;
 
     @GetMapping("/all")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<Response> getAllUsers() {
         Response response = userService.getAllUsers();
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
     @GetMapping("/get-by-id/{userId}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<Response> getUserById(@PathVariable("userId") String userId) {
         Response response = userService.getUserById(userId);
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
     @DeleteMapping("/delete/{userId}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseEntity<Response> deleteUser(@PathVariable("userId") String userId) {
         Response response = userService.deleteUser(userId);
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
+
+    @PutMapping("/grant-role/{userId}")
+    @PreAuthorize("hasAuthority('SUPERADMIN')")
+    public ResponseEntity<Response> grantRole(@PathVariable String userId, @RequestBody String role) {
+        Response response = userService.grantRole(userId, role);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+
 
     @GetMapping("/get-logged-in-profile-info")
     public ResponseEntity<Response> getLoggedInUserProfile() {

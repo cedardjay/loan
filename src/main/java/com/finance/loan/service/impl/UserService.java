@@ -51,11 +51,11 @@ public class UserService implements IUserService {
             user.setPhoneNumber(registerRequest.getPhoneNumber());
             user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
 
-            // assign default role of USER
-            if (registerRequest.getRole() == null || registerRequest.getRole().isBlank()) {
-                user.setRole(Role.USER);
+            long userCount = userRepository.count(); //count the number of users in the database
+            if (userCount == 0) {
+                user.setRole(Role.SUPERADMIN);  // first ever registration = SUPERADMIN
             } else {
-                user.setRole(Role.valueOf(registerRequest.getRole().toUpperCase()));
+                user.setRole(Role.USER);  // everyone else = USER by default
             }
 
             User savedUser = userRepository.save(user);
@@ -105,6 +105,37 @@ public class UserService implements IUserService {
         }
         return response;
     }
+
+
+
+    @Override
+    public Response grantRole(String userId, String role) {
+        Response response = new Response();
+        try {
+            User user = userRepository.findById(Long.valueOf(userId))
+                    .orElseThrow(() -> new OurException("User not found"));
+
+            Role newRole = Role.valueOf(role.toUpperCase()); // converts string to enum
+            user.setRole(newRole);
+            userRepository.save(user);
+
+            response.setStatusCode(200);
+            response.setMessage("Role updated successfully");
+
+        } catch (IllegalArgumentException e) {
+            response.setStatusCode(400);
+            response.setMessage("Invalid role: " + role);
+        } catch (OurException e) {
+            response.setStatusCode(404);
+            response.setMessage(e.getMessage());
+        } catch (Exception e) {
+            response.setStatusCode(500);
+            response.setMessage("Error updating role: " + e.getMessage());
+        }
+        return response;
+    }
+
+
 
 
     @Override

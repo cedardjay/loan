@@ -17,4 +17,6 @@ public interface IUserService {
     Response getUserById(String userId);
 
     Response getMyInfo(String email);
+
+    Response grantRole(String userId, String role);
 }

@@ -1,9 +1,13 @@
 package com.finance.loan.entity;
 
 public enum LoanStatus {
-    NOT_FUNDED,
+    PENDING_APPROVAL,
+    APPROVED,
+    REJECTED,
+    EXPIRED,
     PARTIALLY_FUNDED,
     FULLY_FUNDED,
     DISBURSED,
-    EXPIRED
+    DEFAULTED,
+    PAID
 }

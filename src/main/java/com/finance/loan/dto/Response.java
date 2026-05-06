@@ -16,6 +16,11 @@ public class Response {
     private String role;
     private String expirationTime;
 
+   // private LoanRequestIN loanrequestin;
+
+    private LoanRequestOUT loanrequest;
+    private List<LoanRequestOUT> loanrequestlist;
+
     private UserDTO user;
     private List<UserDTO> userList;
 }

@@ -1,8 +1,12 @@
 package com.finance.loan.utils;
 
+import com.finance.loan.dto.LoanRequestOUT;
 import com.finance.loan.dto.UserDTO;
+import com.finance.loan.entity.LoanRequest;
 import com.finance.loan.entity.User;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,4 +29,60 @@ public class Utils {
                 .map(Utils::mapUserEntityToUserDTO)
                 .collect(Collectors.toList());
     }
+
+
+    // method to create loan request out from entity
+    public static LoanRequestOUT mapLoanRequestEntityToOutput(LoanRequest loanRequest) {
+        LoanRequestOUT output = new LoanRequestOUT();
+
+        // Basic fields
+        output.setRequestId(loanRequest.getRequestId());
+        output.setRequestedAmount(loanRequest.getRequestedAmount());
+        output.setDescription(loanRequest.getDescription());
+        output.setPurpose(loanRequest.getPurpose());
+        output.setTermMonths(loanRequest.getTermMonths());
+        output.setInterestRate(loanRequest.getInterestRate());
+        output.setAmountFunded(loanRequest.getAmountFunded());
+        output.setStatus(loanRequest.getStatus());
+        output.setRequestDate(loanRequest.getRequestDate());
+        output.setDeadLine(loanRequest.getDeadLine());
+
+        // Borrower info (handle lazy loading safely)
+        if (loanRequest.getBorrower() != null) {
+            output.setBorrowerId(loanRequest.getBorrower().getId());
+            output.setBorrowerName(loanRequest.getBorrower().getName());
+            output.setBorrowerEmail(loanRequest.getBorrower().getEmail());
+        }
+
+        // Approver info
+        if (loanRequest.getApproval() != null) {
+            output.setApprovedById(loanRequest.getApproval().getId());
+            output.setApprovedByName(loanRequest.getApproval().getName());
+        }
+
+        // Calculated fields
+        if (loanRequest.getRequestedAmount() != null &&
+                loanRequest.getRequestedAmount().compareTo(BigDecimal.ZERO) > 0) {
+
+            output.setRemainingAmount(loanRequest.getRequestedAmount()
+                    .subtract(loanRequest.getAmountFunded()));
+
+            double percentage = loanRequest.getAmountFunded()
+                    .divide(loanRequest.getRequestedAmount(), 4, RoundingMode.HALF_UP)
+                    .doubleValue() * 100;
+            output.setFundingPercentage(percentage);
+        } else {
+            output.setRemainingAmount(BigDecimal.ZERO);
+            output.setFundingPercentage(0.0);
+        }
+
+        return output;
+    }
+
+    public static List<LoanRequestOUT> mapLoanRequestListEntityToListOutput(List<LoanRequest> loanRequestList) {
+        return loanRequestList.stream()
+                .map(Utils::mapLoanRequestEntityToOutput)
+                .collect(Collectors.toList());
+    }
+
 }

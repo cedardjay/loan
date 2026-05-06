@@ -31,6 +31,9 @@ public class LoanRequest {
     private String description;
 
     @Column(nullable = false)
+    private String purpose;
+
+    @Column(nullable = false)
     private Integer termMonths;
 
     @Column(nullable = false)
@@ -41,13 +44,10 @@ public class LoanRequest {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private LoanState state = LoanState.PENDING_APPROVAL;
+    private LoanStatus status = LoanStatus.PENDING_APPROVAL;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private LoanStatus status = LoanStatus.NOT_FUNDED;
 
-    @Column(updatable = false)
+    @Column(updatable = false, nullable=false)
     private LocalDateTime requestDate;
 
     private LocalDate deadLine; //admin sets Expiry date for the loanRequest

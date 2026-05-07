@@ -95,4 +95,10 @@ public class LoanRequestController {
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
+    @GetMapping("/marketplace")
+    public ResponseEntity<Response> getMarketplaceLoans() {
+        Response response = loanRequestService.getMarketplaceLoans();
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
 }

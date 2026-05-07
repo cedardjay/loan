@@ -279,6 +279,32 @@ public class LoanRequestService {
         }
         return response;
     }
+
+    // GET MARKETPLACE LOANS (APPROVED, PARTIALLY_FUNDED, FULLY_FUNDED)
+    public Response getMarketplaceLoans() {
+        Response response = new Response();
+        try {
+            List<LoanStatus> marketplaceStatuses = List.of(
+                    LoanStatus.APPROVED,
+                    LoanStatus.PARTIALLY_FUNDED,
+                    LoanStatus.FULLY_FUNDED
+            );
+
+            List<LoanRequest> loanRequests = loanRequestRepository.findByStatusIn(marketplaceStatuses);
+            List<LoanRequestOUT> loanRequestOuts = Utils.mapLoanRequestListEntityToListOutput(loanRequests);
+
+            response.setStatusCode(200);
+            response.setMessage("Marketplace loans fetched successfully");
+            response.setLoanrequestlist(loanRequestOuts);
+
+        } catch (Exception e) {
+            response.setStatusCode(500);
+            response.setMessage("Error fetching marketplace loans: " + e.getMessage());
+        }
+        return response;
+    }
+
+
 /*
     // GET Loan Requests by Status
     public Response getLoanRequestsByStatus(LoanStatus status) {

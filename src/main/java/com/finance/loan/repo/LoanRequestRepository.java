@@ -12,8 +12,7 @@ import java.util.List;
 public interface LoanRequestRepository extends JpaRepository<LoanRequest, Long> {
     List<LoanRequest> findByBorrower(User borrower);
 
-    List<LoanRequest> findByStatus(LoanStatus status);
-
+    List<LoanRequest> findByStatusIn(List<LoanStatus> statuses);
 
     List<LoanRequest> findByBorrowerEmail(String email);
 }

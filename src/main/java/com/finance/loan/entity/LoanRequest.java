@@ -43,7 +43,7 @@ public class LoanRequest {
     private BigDecimal amountFunded = BigDecimal.ZERO; //setting initial amount to zero
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private LoanStatus status = LoanStatus.PENDING_APPROVAL;
 
 

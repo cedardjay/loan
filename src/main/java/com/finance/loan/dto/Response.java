@@ -21,4 +21,6 @@ public class Response {
 
     private UserDTO user;
     private List<UserDTO> userList;
+
+    private Object data;
 }

@@ -7,7 +7,8 @@ public enum LoanStatus {
     EXPIRED,
     PARTIALLY_FUNDED,
     FULLY_FUNDED,
-    DISBURSED,
-    DEFAULTED,
-    PAID
+    ACTIVE,
+    IN_GRACE,
+    DEFAULT,
+    COMPLETED
 }

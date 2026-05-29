@@ -44,7 +44,7 @@ public class LoanRequest {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private LoanStatus status = LoanStatus.PENDING_APPROVAL;
+    private LoanStatus status = LoanStatus.PENDING_APPROVAL; //loanRequest automatically set to pending after creation
 
 
     @Column(updatable = false, nullable=false)
@@ -52,10 +52,16 @@ public class LoanRequest {
 
     private LocalDate deadLine; //admin sets Expiry date for the loanRequest
 
+    @OneToMany(mappedBy = "loanRequest", fetch = FetchType.LAZY)
+    private List<RepaymentSchedule> repaymentSchedules;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approval_id")
     private User approval; //Approved or rejected
 
     @OneToMany(mappedBy = "loanRequest", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<MatchedRequest> matchedRequests = new ArrayList<>();
+
+    @OneToMany(mappedBy = "loanRequest", fetch = FetchType.LAZY)
+    private List<Transaction> transactions = new ArrayList<>();
 }

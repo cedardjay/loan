@@ -60,7 +60,7 @@ public class UserService implements IUserService {
             }
 
             User savedUser = userRepository.save(user);
-            UserDTO userDTO = Utils.mapUserEntityToUserDTO(savedUser);
+            UserDTO userDTO = Utils.mapUserEntityToDTO(savedUser);
             response.setStatusCode(200);
             response.setMessage("User registered successfully");
             response.setData(userDTO);
@@ -162,7 +162,7 @@ public class UserService implements IUserService {
             // no validation needed, empty list is a valid result
 
             // --- EXECUTE ---
-            List<UserDTO> userDTOList = Utils.mapUserListEntityToUserListDTO(userList);
+            List<UserDTO> userDTOList = Utils.mapUserListToDTO(userList);
 
             // --- RETURN ---
             response.setStatusCode(200);
@@ -219,7 +219,7 @@ public class UserService implements IUserService {
             // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("User fetched successfully");
-            response.setData(Utils.mapUserEntityToUserDTO(user));
+            response.setData(Utils.mapUserEntityToDTO(user));
 
         } catch (OurException e) {
             response.setStatusCode(404);
@@ -243,7 +243,7 @@ public class UserService implements IUserService {
             // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("User info fetched successfully");
-            response.setData(Utils.mapUserEntityToUserDTO(user));
+            response.setData(Utils.mapUserEntityToDTO(user));
 
         } catch (OurException e) {
             response.setStatusCode(404);

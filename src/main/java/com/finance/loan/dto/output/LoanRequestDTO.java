@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoanRequestOUT {
+public class LoanRequestDTO {
 
     // Basic loan information
     private Long requestId;

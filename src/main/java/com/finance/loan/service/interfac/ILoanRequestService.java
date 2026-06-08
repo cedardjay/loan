@@ -2,29 +2,31 @@ package com.finance.loan.service.interfac;
 
 import com.finance.loan.dto.input.LoanRequestIN;
 import com.finance.loan.dto.Response;
+import com.finance.loan.dto.output.LoanRequestDTO;
+
+import java.util.List;
 
 public interface ILoanRequestService {
 
-    Response createLoanRequest(LoanRequestIN requestDTO, String email);
+    Response<LoanRequestDTO> createLoanRequest(LoanRequestIN requestDTO, String email);
 
-    Response getLoanRequestsByBorrowerEmail(String email);
+    Response<List<LoanRequestDTO>> getLoanRequestsByBorrowerEmail(String email);
 
-    Response getMyLoanRequestById(Long requestId, String email);
+    Response<LoanRequestDTO> getMyLoanRequestById(Long requestId, String email);
 
-    Response deleteLoanRequest(Long requestId, String email);
+    Response<Void> deleteLoanRequest(Long requestId, String email);
 
-    Response getAllLoanRequests();
+    Response<List<LoanRequestDTO>> getAllLoanRequests();
 
-    Response getLoanRequestById(Long requestId);
+    Response<LoanRequestDTO> getLoanRequestById(Long requestId);
 
-    Response getLoanRequestsByBorrowerId(Long borrowerId);
+    Response<List<LoanRequestDTO>> getLoanRequestsByBorrowerId(Long borrowerId);
 
-    Response approveLoanRequest(Long requestId);
+    Response<LoanRequestDTO> approveLoanRequest(Long requestId);
 
-    Response rejectLoanRequest(Long requestId);
+    Response<LoanRequestDTO> rejectLoanRequest(Long requestId);
 
-    Response getMarketplaceLoans();
+    Response<List<LoanRequestDTO>> getMarketplaceLoans();
 
-    Response disburseLoan(Long requestId, String adminEmail);
-
+    Response<LoanRequestDTO> disburseLoan(Long requestId, String adminEmail);
 }

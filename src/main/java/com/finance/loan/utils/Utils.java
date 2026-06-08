@@ -1,6 +1,6 @@
 package com.finance.loan.utils;
 
-import com.finance.loan.dto.output.LoanRequestOUT;
+import com.finance.loan.dto.output.LoanRequestDTO;
 import com.finance.loan.dto.output.UserDTO;
 import com.finance.loan.entity.LoanRequest;
 import com.finance.loan.entity.User;
@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 public class Utils {
 
-    public static UserDTO mapUserEntityToUserDTO(User user) {
+    public static UserDTO mapUserEntityToDTO(User user) {
         UserDTO userDTO = new UserDTO();
 
         userDTO.setId(user.getId());
@@ -24,16 +24,16 @@ public class Utils {
         return userDTO;
     }
 
-    public static List<UserDTO> mapUserListEntityToUserListDTO(List<User> userList) {
+    public static List<UserDTO> mapUserListToDTO(List<User> userList) {
         return userList.stream()
-                .map(Utils::mapUserEntityToUserDTO)
+                .map(Utils::mapUserEntityToDTO)
                 .collect(Collectors.toList());
     }
 
 
     // method to create loan request out from entity
-    public static LoanRequestOUT mapLoanRequestEntityToOutput(LoanRequest loanRequest) {
-        LoanRequestOUT output = new LoanRequestOUT();
+    public static LoanRequestDTO mapLoanRequestEntityToDTO(LoanRequest loanRequest) {
+        LoanRequestDTO output = new LoanRequestDTO();
 
         // Basic fields
         output.setRequestId(loanRequest.getRequestId());
@@ -79,9 +79,9 @@ public class Utils {
         return output;
     }
 
-    public static List<LoanRequestOUT> mapLoanRequestListEntityToListOutput(List<LoanRequest> loanRequestList) {
+    public static List<LoanRequestDTO> mapLoanRequestListToDTO(List<LoanRequest> loanRequestList) {
         return loanRequestList.stream()
-                .map(Utils::mapLoanRequestEntityToOutput)
+                .map(Utils::mapLoanRequestEntityToDTO)
                 .collect(Collectors.toList());
     }
 

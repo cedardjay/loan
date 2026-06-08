@@ -10,7 +10,7 @@ import java.util.List;
 
 @Repository
 public interface LoanRequestRepository extends JpaRepository<LoanRequest, Long> {
-    List<LoanRequest> findByBorrower(User borrower);
+    List<LoanRequest> findByBorrower_Id(long borrowerId);
 
     List<LoanRequest> findByStatusIn(List<LoanStatus> statuses);
 

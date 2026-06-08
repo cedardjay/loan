@@ -12,6 +12,17 @@ import java.util.List;
 
 public class LoanCalculatorUtil {
 
+    public static BigDecimal calculateExpectedReturn(BigDecimal investedAmount,
+                                                     BigDecimal interestRate,
+                                                     int termMonths) {
+        return investedAmount
+                .multiply(interestRate
+                        .divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP))
+                .multiply(BigDecimal.valueOf(termMonths)
+                        .divide(BigDecimal.valueOf(12), 10, RoundingMode.HALF_UP))
+                .setScale(2, RoundingMode.HALF_UP);
+    }
+
     //mock function to calculate repayment schedules
     public static List<RepaymentSchedule> buildSchedule(LoanRequest loanRequest) {
         int termMonths = loanRequest.getTermMonths();

@@ -59,7 +59,7 @@ public class RepaymentScheduleService implements IRepaymentScheduleService {
             // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("Repayment schedule retrieved successfully");
-            response.setData(RepaymentScheduleUtils.mapRepaymentScheduleListToOutput(schedules));
+            response.setData(RepaymentScheduleUtils.mapRepaymentScheduleListToDTO(schedules));
 
         } catch (OurException e) {
             response.setStatusCode(404);

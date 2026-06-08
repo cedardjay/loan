@@ -4,6 +4,8 @@ import com.finance.loan.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -45,6 +47,14 @@ public class SecurityConfig {
 
         return httpSecurity.build();
     }
+/*//need to check this to create a role hierarchy
+    @Bean
+    public RoleHierarchy roleHierarchy() {
+        RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();
+        hierarchy.setHierarchy("SUPERADMIN > ADMIN > USER");
+        return hierarchy;
+    }
+*/
 
     @Bean
     public AuthenticationProvider authenticationProvider() {

@@ -1,8 +1,8 @@
 package com.finance.loan.controller;
 
-import com.finance.loan.dto.LoanRequestIN;
-import com.finance.loan.service.impl.LoanRequestService;
+import com.finance.loan.dto.input.LoanRequestIN;
 import com.finance.loan.dto.Response;
+import com.finance.loan.service.interfac.ILoanRequestService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class LoanRequestController {
 
     @Autowired
-    private LoanRequestService loanRequestService;
+    private ILoanRequestService loanRequestService;
 
     // CREATE Loan request
     @PostMapping("/create")
@@ -65,7 +65,7 @@ public class LoanRequestController {
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
-    // find loan requests by id of the request
+    // find any loan request by id of the request
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
     public ResponseEntity<Response> getLoanRequestById(@PathVariable Long id) {
@@ -94,11 +94,24 @@ public class LoanRequestController {
         Response response = loanRequestService.rejectLoanRequest(requestId);
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
-
+// get marketplace loans
     @GetMapping("/marketplace")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN', 'SUPERADMIN')")
     public ResponseEntity<Response> getMarketplaceLoans() {
         Response response = loanRequestService.getMarketplaceLoans();
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
+    @PutMapping("/disburse/{requestId}")
+    @PreAuthorize("hasAuthority('SUPERADMIN')")
+    public ResponseEntity<Response> disburseLoan(@PathVariable Long requestId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String adminEmail = authentication.getName();
+        Response response = loanRequestService.disburseLoan(requestId, adminEmail);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+
 }
+
+

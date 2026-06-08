@@ -1,8 +1,8 @@
 package com.finance.loan.controller;
 
-import com.finance.loan.dto.InvestRequest;
+import com.finance.loan.dto.input.InvestRequest;
 import com.finance.loan.dto.Response;
-import com.finance.loan.service.impl.MatchedRequestService;
+import com.finance.loan.service.interfac.IMatchedRequestService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class MatchedRequestController {
 
     @Autowired
-    private MatchedRequestService matchedRequestService;
+    private IMatchedRequestService matchedRequestService;
 
     @PostMapping("/invest/{loanRequestId}")
     public ResponseEntity<Response> investInLoan(

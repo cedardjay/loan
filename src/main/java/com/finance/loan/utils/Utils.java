@@ -1,7 +1,7 @@
 package com.finance.loan.utils;
 
-import com.finance.loan.dto.LoanRequestOUT;
-import com.finance.loan.dto.UserDTO;
+import com.finance.loan.dto.output.LoanRequestOUT;
+import com.finance.loan.dto.output.UserDTO;
 import com.finance.loan.entity.LoanRequest;
 import com.finance.loan.entity.User;
 

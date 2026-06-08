@@ -22,7 +22,7 @@ public class RepaymentSchedule {
     private Long scheduleId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "loan_id", nullable = false)
+    @JoinColumn(name = "loan_request_id", nullable = false)
     private LoanRequest loanRequest;
 
     @ManyToOne(fetch = FetchType.LAZY)

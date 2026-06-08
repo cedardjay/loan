@@ -1,4 +1,4 @@
-package com.finance.loan.dto;
+package com.finance.loan.dto.output;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;

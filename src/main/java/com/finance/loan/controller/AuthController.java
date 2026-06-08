@@ -1,7 +1,7 @@
 package com.finance.loan.controller;
 
-import com.finance.loan.dto.LoginRequest;
-import com.finance.loan.dto.RegisterRequest;
+import com.finance.loan.dto.input.LoginRequest;
+import com.finance.loan.dto.input.RegisterRequest;
 import com.finance.loan.dto.Response;
 import com.finance.loan.service.interfac.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;

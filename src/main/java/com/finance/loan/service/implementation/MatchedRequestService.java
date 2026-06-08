@@ -1,6 +1,6 @@
-package com.finance.loan.service.impl;
+package com.finance.loan.service.implementation;
 
-import com.finance.loan.dto.InvestRequest;
+import com.finance.loan.dto.input.InvestRequest;
 import com.finance.loan.dto.Response;
 import com.finance.loan.entity.LoanRequest;
 import com.finance.loan.entity.LoanStatus;
@@ -10,6 +10,7 @@ import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.LoanRequestRepository;
 import com.finance.loan.repo.MatchedRequestRepository;
 import com.finance.loan.repo.UserRepository;
+import com.finance.loan.service.interfac.IMatchedRequestService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class MatchedRequestService {
+public class MatchedRequestService implements IMatchedRequestService {
 
     @Autowired
     private MatchedRequestRepository matchedRequestRepository;

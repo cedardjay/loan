@@ -1,9 +1,10 @@
-package com.finance.loan.service.impl;
+package com.finance.loan.service.implementation;
 
-import com.finance.loan.dto.LoginRequest;
-import com.finance.loan.dto.RegisterRequest;
+import com.finance.loan.dto.input.LoginRequest;
+import com.finance.loan.dto.input.RegisterRequest;
 import com.finance.loan.dto.Response;
-import com.finance.loan.dto.UserDTO;
+import com.finance.loan.dto.output.LoginDTO;
+import com.finance.loan.dto.output.UserDTO;
 import com.finance.loan.entity.Role;
 import com.finance.loan.entity.User;
 import com.finance.loan.exception.OurException;
@@ -36,8 +37,8 @@ public class UserService implements IUserService {
 
 
     @Override
-    public Response register(RegisterRequest registerRequest) {
-        Response response = new Response();
+    public Response<UserDTO> register(RegisterRequest registerRequest) {
+        Response<UserDTO> response = new Response<>();
         try {
             // check if email already exists
             if (userRepository.existsByEmail(registerRequest.getEmail())) {
@@ -62,7 +63,7 @@ public class UserService implements IUserService {
             UserDTO userDTO = Utils.mapUserEntityToUserDTO(savedUser);
             response.setStatusCode(200);
             response.setMessage("User registered successfully");
-            response.setUser(userDTO);
+            response.setData(userDTO);
 
         } catch (OurException e) {
             response.setStatusCode(400);
@@ -76,9 +77,10 @@ public class UserService implements IUserService {
 
 
     @Override
-    public Response login(LoginRequest loginRequest) {
-        Response response = new Response();
+    public Response<LoginDTO> login(LoginRequest loginRequest) {
+        Response<LoginDTO> response = new Response<>();
         try {
+            // --- FETCH ---
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getEmail(),
@@ -89,12 +91,19 @@ public class UserService implements IUserService {
             User user = userRepository.findByEmail(loginRequest.getEmail())
                     .orElseThrow(() -> new OurException("User not found"));
 
+            // --- EXECUTE ---
             String token = jwtUtils.generateToken(user);
+
+            LoginDTO loginDTO = LoginDTO.builder()
+                    .token(token)
+                    .role(user.getRole().name())
+                    .expirationTime("7 Days")
+                    .build();
+
+            // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("Login successful");
-            response.setToken(token);
-            response.setRole(user.getRole().name());
-            response.setExpirationTime("7 Days");
+            response.setData(loginDTO);
 
         } catch (OurException e) {
             response.setStatusCode(404);
@@ -106,19 +115,24 @@ public class UserService implements IUserService {
         return response;
     }
 
-
-
     @Override
-    public Response grantRole(String userId, String role) {
-        Response response = new Response();
+    public Response<Void> grantRole(long userId, String role) {
+        Response<Void> response = new Response<>();
         try {
-            User user = userRepository.findById(Long.valueOf(userId))
+            // --- FETCH ---
+            User user = userRepository.findById(userId)
                     .orElseThrow(() -> new OurException("User not found"));
 
-            Role newRole = Role.valueOf(role.toUpperCase()); // converts string to enum
+            // --- VALIDATE ---
+            Role newRole = Role.valueOf(role.toUpperCase());
+
+            // --- EXECUTE ---
             user.setRole(newRole);
+
+            // --- PERSIST ---
             userRepository.save(user);
 
+            // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("Role updated successfully");
 
@@ -137,16 +151,23 @@ public class UserService implements IUserService {
 
 
 
-
     @Override
-    public Response getAllUsers() {
-        Response response = new Response();
+    public Response<List<UserDTO>> getAllUsers() {
+        Response<List<UserDTO>> response = new Response<>();
         try {
+            // --- FETCH ---
             List<User> userList = userRepository.findAll();
+
+            // --- VALIDATE ---
+            // no validation needed, empty list is a valid result
+
+            // --- EXECUTE ---
             List<UserDTO> userDTOList = Utils.mapUserListEntityToUserListDTO(userList);
+
+            // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("Users fetched successfully");
-            response.setUserList(userDTOList);
+            response.setData(userDTOList);
 
         } catch (Exception e) {
             response.setStatusCode(500);
@@ -157,13 +178,23 @@ public class UserService implements IUserService {
 
 
     @Override
-    public Response deleteUser(String userId) {
-        Response response = new Response();
+    public Response<Void> deleteUser(long userId) {
+        Response<Void> response = new Response<>();
         try {
-            userRepository.findById(Long.valueOf(userId))
+            // --- FETCH ---
+            userRepository.findById(userId)
                     .orElseThrow(() -> new OurException("User not found"));
 
-            userRepository.deleteById(Long.valueOf(userId));
+            // --- VALIDATE ---
+            // existence check handled above
+
+            // --- EXECUTE ---
+            // no computation needed
+
+            // --- PERSIST ---
+            userRepository.deleteById(userId);
+
+            // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("User deleted successfully");
 
@@ -177,18 +208,18 @@ public class UserService implements IUserService {
         return response;
     }
 
-
     @Override
-    public Response getUserById(String userId) {
-        Response response = new Response();
+    public Response<UserDTO> getUserById(Long userId) {
+        Response<UserDTO> response = new Response<>();
         try {
-            User user = userRepository.findById(Long.valueOf(userId))
+            // --- FETCH ---
+            User user = userRepository.findById(userId)
                     .orElseThrow(() -> new OurException("User not found"));
 
-            UserDTO userDTO = Utils.mapUserEntityToUserDTO(user);
+            // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("User fetched successfully");
-            response.setUser(userDTO);
+            response.setData(Utils.mapUserEntityToUserDTO(user));
 
         } catch (OurException e) {
             response.setStatusCode(404);
@@ -202,16 +233,17 @@ public class UserService implements IUserService {
 
 
     @Override
-    public Response getMyInfo(String email) {
-        Response response = new Response();
+    public Response<UserDTO> getMyInfo(String email) {
+        Response<UserDTO> response = new Response<>();
         try {
+            // --- FETCH ---
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new OurException("User not found"));
 
-            UserDTO userDTO = Utils.mapUserEntityToUserDTO(user);
+            // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("User info fetched successfully");
-            response.setUser(userDTO);
+            response.setData(Utils.mapUserEntityToUserDTO(user));
 
         } catch (OurException e) {
             response.setStatusCode(404);

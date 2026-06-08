@@ -40,16 +40,8 @@ public class Transaction {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TransactionType type;
-
     @Column(nullable = false)
     private String paymentMethod;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TransactionStatus status;
 
     @Column(nullable = false)
     private LocalDateTime transactionDate;

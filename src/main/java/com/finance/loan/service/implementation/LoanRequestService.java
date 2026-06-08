@@ -1,30 +1,45 @@
-package com.finance.loan.service.impl;
+package com.finance.loan.service.implementation;
 
-import com.finance.loan.dto.LoanRequestIN;
-import com.finance.loan.dto.LoanRequestOUT;
-import com.finance.loan.entity.LoanRequest;
-import com.finance.loan.entity.LoanStatus;
-import com.finance.loan.entity.User;
+import com.finance.loan.dto.input.LoanRequestIN;
+import com.finance.loan.dto.output.LoanRequestOUT;
+import com.finance.loan.dto.output.PaymentResult;
+import com.finance.loan.entity.*;
 import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.LoanRequestRepository;
 import com.finance.loan.repo.UserRepository;
 import com.finance.loan.dto.Response;
-import com.finance.loan.utils.Utils;
+import com.finance.loan.service.interfac.ILoanRequestService;
+import com.finance.loan.service.interfac.IPaymentGatewayService;
+import com.finance.loan.service.interfac.IRepaymentScheduleService;
+import com.finance.loan.service.interfac.ITransactionService;
+import com.finance.loan.utils.*;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
+
 
 @Service
-public class LoanRequestService {
+public class LoanRequestService implements ILoanRequestService {
 
     @Autowired
     private LoanRequestRepository loanRequestRepository;
 
     @Autowired
     private UserRepository userRepository;
+
+@Autowired
+private ITransactionService transactionService;
+
+@Autowired
+private IRepaymentScheduleService repaymentScheduleService;
+
+@Autowired
+private IPaymentGatewayService paymentGatewayService;
 
     // CREATE
     public Response createLoanRequest(LoanRequestIN requestDTO, String email) {
@@ -43,7 +58,7 @@ public class LoanRequestService {
             loanRequest.setStatus(LoanStatus.PENDING_APPROVAL);
             loanRequest.setRequestDate(LocalDateTime.now());
 
-            BigDecimal interestRate = calculateInterestRate(requestDTO.getRequestedAmount(), requestDTO.getTermMonths());
+            BigDecimal interestRate = LoanCalculatorUtil.calculateInterestRate(requestDTO.getRequestedAmount(), requestDTO.getTermMonths());
             loanRequest.setInterestRate(interestRate);
 
             LoanRequest savedRequest = loanRequestRepository.save(loanRequest);
@@ -62,15 +77,7 @@ public class LoanRequestService {
         return response;
     }
 
-    private BigDecimal calculateInterestRate(BigDecimal amount, Integer termMonths) {
-        if (amount.compareTo(new BigDecimal("10000")) > 0) {
-            return new BigDecimal("5.5");
-        } else if (termMonths > 24) {
-            return new BigDecimal("6.0");
-        } else {
-            return new BigDecimal("7.0");
-        }
-    }
+
 
 
     // GET MY REQUESTS
@@ -155,7 +162,7 @@ public class LoanRequestService {
     }
 
 
-    // GET ALL (ADMIN and SUPERADMINS)
+    // GET ALL loan requests (ADMIN and SUPERADMINS)
     public Response getAllLoanRequests() {
         Response response = new Response();
         try {
@@ -304,6 +311,72 @@ public class LoanRequestService {
         return response;
     }
 
+    //DISBURSING A LOAN
+    @Transactional
+    public Response disburseLoan(Long requestId, String adminEmail) {
+        Response response = new Response();
+        try {
+
+            // --- FETCH ---
+            User admin = userRepository.findByEmail(adminEmail)
+                    .orElseThrow(() -> new OurException("Admin user not found"));
+
+            LoanRequest loanRequest = loanRequestRepository.findById(requestId)
+                    .orElseThrow(() -> new OurException("Loan request not found with id: " + requestId));
+
+            // --- VALIDATE ---
+            if (loanRequest.getStatus() != LoanStatus.FULLY_FUNDED) {
+                response.setStatusCode(400);
+                response.setMessage("Only fully funded loan requests can be disbursed");
+                return response;
+            }
+
+            if (loanRequest.getBorrower() == null) {
+                response.setStatusCode(400);
+                response.setMessage("No borrower linked to this loan request");
+                return response;
+            }
+
+            // --- EXECUTE ---
+            String paymentReference = "DISB-" + UUID.randomUUID().toString().toUpperCase();
+            PaymentResult result = paymentGatewayService.disburse(
+                    loanRequest.getRequestedAmount(),
+                    loanRequest.getBorrower(),
+                    paymentReference
+            );
+
+            if (!result.isSuccessful()) {
+                response.setStatusCode(400);
+                response.setMessage("Payment gateway failed: " + result.getErrorMessage());
+                return response;
+            }
+
+
+            // --- PERSIST ---
+            transactionService.recordDisbursement(
+                    admin, loanRequest.getBorrower(), loanRequest,
+                    loanRequest.getRequestedAmount(), paymentReference);
+
+            repaymentScheduleService.generateSchedule(loanRequest);
+
+            loanRequest.setStatus(LoanStatus.ACTIVE);
+            LoanRequest updatedLoan = loanRequestRepository.save(loanRequest);
+
+            // --- RETURN ---
+            response.setStatusCode(200);
+            response.setMessage("Loan disbursed successfully. Reference: " + paymentReference);
+            response.setLoanrequest(Utils.mapLoanRequestEntityToOutput(updatedLoan));
+
+        } catch (OurException e) {
+            response.setStatusCode(404);
+            response.setMessage(e.getMessage());
+        } catch (Exception e) {
+            response.setStatusCode(500);
+            response.setMessage("Error disbursing loan: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+        return response;
+    }
 
 /*
     // GET Loan Requests by Status
@@ -357,64 +430,7 @@ public class LoanRequestService {
         return response;
     }
 
-    // UPDATE Loan Request State
-    public Response updateLoanRequestState(Long requestId, LoanState newState) {
-        Response response = new Response();
-        try {
-            LoanRequest loanRequest = loanRequestRepository.findById(requestId)
-                    .orElseThrow(() -> new OurException("Loan request not found"));
 
-            loanRequest.setState(newState);
-            LoanRequest updatedRequest = loanRequestRepository.save(loanRequest);
-
-            response.setStatusCode(200);
-            response.setMessage("Loan request state updated successfully");
-            LoanRequestOut loanRequestOut = Utils.mapLoanRequestEntityToOutput(updatedRequest);
-            response.setLoanrequest(loanRequestOut);
-
-        } catch (OurException e) {
-            response.setStatusCode(404);
-            response.setMessage(e.getMessage());
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error updating loan request state: " + e.getMessage());
-        }
-        return response;
-    }
-
-    // UPDATE Amount Funded
-    public Response updateAmountFunded(Long requestId, BigDecimal additionalAmount) {
-        Response response = new Response();
-        try {
-            LoanRequest loanRequest = loanRequestRepository.findById(requestId)
-                    .orElseThrow(() -> new OurException("Loan request not found"));
-
-            BigDecimal newAmountFunded = loanRequest.getAmountFunded().add(additionalAmount);
-
-            // Check if fully funded
-            if (newAmountFunded.compareTo(loanRequest.getRequestedAmount()) >= 0) {
-                newAmountFunded = loanRequest.getRequestedAmount();
-                loanRequest.setStatus(LoanStatus.FULLY_FUNDED);
-                loanRequest.setState(LoanState.APPROVED);
-            }
-
-            loanRequest.setAmountFunded(newAmountFunded);
-            LoanRequest updatedRequest = loanRequestRepository.save(loanRequest);
-
-            response.setStatusCode(200);
-            response.setMessage("Amount funded updated successfully");
-            LoanRequestOut loanRequestOut = Utils.mapLoanRequestEntityToOutput(updatedRequest);
-            response.setLoanrequest(loanRequestOut);
-
-        } catch (OurException e) {
-            response.setStatusCode(404);
-            response.setMessage(e.getMessage());
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error updating amount funded: " + e.getMessage());
-        }
-        return response;
-    }
 */
 
 

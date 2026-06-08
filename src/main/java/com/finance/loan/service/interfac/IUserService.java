@@ -1,22 +1,27 @@
 package com.finance.loan.service.interfac;
 
-import com.finance.loan.dto.LoginRequest;
-import com.finance.loan.dto.RegisterRequest;
+import com.finance.loan.dto.input.LoginRequest;
+import com.finance.loan.dto.input.RegisterRequest;
 import com.finance.loan.dto.Response;
+import com.finance.loan.dto.output.LoginDTO;
+import com.finance.loan.dto.output.UserDTO;
+
+import java.util.List;
 
 public interface IUserService {
 
-    Response register(RegisterRequest registerRequest);
+    Response<UserDTO> register(RegisterRequest registerRequest);
 
-    Response login(LoginRequest loginRequest);
+    Response<LoginDTO> login(LoginRequest loginRequest);
 
-    Response getAllUsers();
+    Response<Void> grantRole(long userId, String role);
 
-    Response deleteUser(String userId);
+    Response<List<UserDTO>> getAllUsers();
 
-    Response getUserById(String userId);
+    Response<Void> deleteUser(long userId);
 
-    Response getMyInfo(String email);
+    Response<UserDTO> getUserById(Long userId);
 
-    Response grantRole(String userId, String role);
+    Response<UserDTO> getMyInfo(String email);
+
 }

@@ -1,4 +1,4 @@
-package com.finance.loan.dto;
+package com.finance.loan.dto.input;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;

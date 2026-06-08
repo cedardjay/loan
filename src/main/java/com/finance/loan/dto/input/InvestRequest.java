@@ -1,4 +1,4 @@
-package com.finance.loan.dto;
+package com.finance.loan.dto.input;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

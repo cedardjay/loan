@@ -24,6 +24,8 @@ public class RepaymentScheduleController {
     @Autowired
     private IRepaymentScheduleService repaymentScheduleService;
 
+
+    //GET THE REPAYMENT SCHEDULE FOR A PARTICULAR LOAN REQUEST
     @GetMapping("/schedule/{loanRequestId}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
     public ResponseEntity<Response<List<RepaymentScheduleDTO>>> getRepaymentScheduleByLoanRequest(@PathVariable @NotNull @Positive Long loanRequestId) {

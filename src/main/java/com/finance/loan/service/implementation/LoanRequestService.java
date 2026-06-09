@@ -50,7 +50,7 @@ private IPaymentGatewayService paymentGatewayService;
                     .orElseThrow(() -> new OurException("User not found"));
 
             // --- EXECUTE ---
-            BigDecimal interestRate = LoanCalculatorUtil.calculateInterestRate(
+            BigDecimal interestRate = LoanCalculatorUtils.calculateInterestRate(
                     requestDTO.getRequestedAmount(),
                     requestDTO.getTermMonths()
             );

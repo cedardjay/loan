@@ -8,7 +8,7 @@ import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.LoanRequestRepository;
 import com.finance.loan.repo.RepaymentScheduleRepository;
 import com.finance.loan.service.interfac.IRepaymentScheduleService;
-import com.finance.loan.utils.LoanCalculatorUtil;
+import com.finance.loan.utils.LoanCalculatorUtils;
 import com.finance.loan.utils.RepaymentScheduleUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,7 +26,7 @@ public class RepaymentScheduleService implements IRepaymentScheduleService {
     private LoanRequestRepository loanRequestRepository;
 
     public void generateSchedule(LoanRequest loanRequest) {
-        List<RepaymentSchedule> schedules = LoanCalculatorUtil.buildSchedule(loanRequest);
+        List<RepaymentSchedule> schedules = LoanCalculatorUtils.buildSchedule(loanRequest);
         repaymentScheduleRepository.saveAll(schedules);
     }
 

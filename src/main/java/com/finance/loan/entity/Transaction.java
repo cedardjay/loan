@@ -30,7 +30,7 @@ public class Transaction {
     private User receiver;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "loan_id", nullable = false)
+    @JoinColumn(name = "loan_request_id", nullable = false)
     private LoanRequest loanRequest;
 
     @ManyToOne(fetch = FetchType.LAZY)

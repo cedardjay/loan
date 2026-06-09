@@ -13,7 +13,7 @@ import com.finance.loan.repo.LoanRequestRepository;
 import com.finance.loan.repo.MatchedRequestRepository;
 import com.finance.loan.repo.UserRepository;
 import com.finance.loan.service.interfac.IMatchedRequestService;
-import com.finance.loan.utils.LoanCalculatorUtil;
+import com.finance.loan.utils.LoanCalculatorUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -156,7 +156,7 @@ public class MatchedRequestService implements IMatchedRequestService {
             List<InvestmentDTO> investmentList = investments.stream().map(match -> {
                 LoanRequest loan = match.getLoanRequest();
 
-                BigDecimal expectedReturn = LoanCalculatorUtil.calculateExpectedReturn(
+                BigDecimal expectedReturn = LoanCalculatorUtils.calculateExpectedReturn(
                         match.getInvestorAmount(),
                         loan.getInterestRate(),
                         loan.getTermMonths()

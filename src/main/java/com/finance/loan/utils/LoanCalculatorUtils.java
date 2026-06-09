@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LoanCalculatorUtil {
+public class LoanCalculatorUtils {
 
     public static BigDecimal calculateExpectedReturn(BigDecimal investedAmount,
                                                      BigDecimal interestRate,

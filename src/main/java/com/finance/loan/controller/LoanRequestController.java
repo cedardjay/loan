@@ -1,10 +1,18 @@
 package com.finance.loan.controller;
 
+import com.finance.loan.dto.input.InvestRequest;
 import com.finance.loan.dto.input.LoanRequestIN;
 import com.finance.loan.dto.Response;
 import com.finance.loan.dto.output.LoanRequestDTO;
+import com.finance.loan.dto.output.RepaymentScheduleDTO;
+import com.finance.loan.dto.output.TransactionDTO;
 import com.finance.loan.service.interfac.ILoanRequestService;
+import com.finance.loan.service.interfac.IMatchedRequestService;
+import com.finance.loan.service.interfac.IRepaymentScheduleService;
+import com.finance.loan.service.interfac.ITransactionService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,6 +28,15 @@ public class LoanRequestController {
 
     @Autowired
     private ILoanRequestService loanRequestService;
+
+    @Autowired
+    private ITransactionService transactionService;
+
+    @Autowired
+    private IRepaymentScheduleService repaymentScheduleService;
+
+    @Autowired
+    private IMatchedRequestService matchedRequestService;
 
     // CREATE Loan request
     @PostMapping("/create")
@@ -45,11 +62,21 @@ public class LoanRequestController {
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
-    // DELETE
-    @DeleteMapping("/my-requests/delete/{id}")
+    // DELETE my loan request
+    @DeleteMapping("/my-requests/{id}/delete")
     public ResponseEntity<Response<Void>> deleteLoanRequest(@PathVariable Long id) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Response<Void> response = loanRequestService.deleteLoanRequest(id, email);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    //invest in a loan
+    @PostMapping("/{loanRequestId}/invest")
+    public ResponseEntity<Response<Void>> investInLoan(
+            @PathVariable @NotNull @Positive Long loanRequestId,
+            @Valid @RequestBody InvestRequest investmentRequest) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Response<Void> response = matchedRequestService.investInLoan(loanRequestId, investmentRequest, email);
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
@@ -78,7 +105,7 @@ public class LoanRequestController {
     }
 
     // APPROVE (ADMIN and SUPERADMIN)
-    @PutMapping("/approve/{requestId}")
+    @PutMapping("/{requestId}/approve/")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
     public ResponseEntity<Response<LoanRequestDTO>> approveLoanRequest(@PathVariable Long requestId) {
         Response<LoanRequestDTO> response = loanRequestService.approveLoanRequest(requestId);
@@ -86,7 +113,7 @@ public class LoanRequestController {
     }
 
     // REJECT (ADMIN and SUPERADMIN)
-    @PutMapping("/reject/{requestId}")
+    @PutMapping("/{requestId}/reject")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
     public ResponseEntity<Response<LoanRequestDTO>> rejectLoanRequest(@PathVariable Long requestId) {
         Response<LoanRequestDTO> response = loanRequestService.rejectLoanRequest(requestId);
@@ -102,11 +129,50 @@ public class LoanRequestController {
     }
 
     // DISBURSE (SUPERADMIN)
-    @PutMapping("/disburse/{requestId}")
+    @PutMapping("/{requestId}/disburse")
     @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseEntity<Response<LoanRequestDTO>> disburseLoan(@PathVariable Long requestId) {
         String adminEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         Response<LoanRequestDTO> response = loanRequestService.disburseLoan(requestId, adminEmail);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+
+    @GetMapping("/{loanRequestId}/transactions")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
+    public ResponseEntity<Response<List<TransactionDTO>>> getTransactionsByLoanRequest(
+            @PathVariable Long loanRequestId) {
+        Response<List<TransactionDTO>> response = transactionService
+                .getTransactionsByLoanRequest(loanRequestId);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    @GetMapping("/{loanRequestId}/my-transactions")
+    public ResponseEntity<Response<List<TransactionDTO>>> getMyLoanTransactions(
+            @PathVariable Long loanRequestId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Response<List<TransactionDTO>> response = transactionService
+                .getMyLoanTransactions(loanRequestId, email);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+
+    //GET THE REPAYMENT SCHEDULE FOR A PARTICULAR LOAN REQUEST
+    @GetMapping("/{loanRequestId}/repayment-schedule")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
+    public ResponseEntity<Response<List<RepaymentScheduleDTO>>> getRepaymentScheduleByLoanRequest(@PathVariable Long loanRequestId) {
+        Response<List<RepaymentScheduleDTO>> response = repaymentScheduleService.getRepaymentScheduleByLoanRequest(loanRequestId);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+
+    //USER TO GET REPAYMENT SCHEDULE FOR THEIR LOAN REQUEST
+    @GetMapping("/{loanRequestId}/my-repayment-schedule/")
+    public ResponseEntity<Response<List<RepaymentScheduleDTO>>> getMyRepaymentSchedule(
+            @PathVariable Long loanRequestId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Response<List<RepaymentScheduleDTO>> response = repaymentScheduleService
+                .getMyRepaymentSchedule(loanRequestId, email);
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 }

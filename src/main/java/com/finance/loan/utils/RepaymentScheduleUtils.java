@@ -8,13 +8,13 @@ import java.util.stream.Collectors;
 
 public class RepaymentScheduleUtils {
 
-    public static List<RepaymentScheduleDTO> mapRepaymentScheduleListToDTO(List<RepaymentSchedule> schedules) {
+    public static List<RepaymentScheduleDTO> mapRepaymentScheduleListToOutput(List<RepaymentSchedule> schedules) {
         return schedules.stream()
-                .map(RepaymentScheduleUtils::mapRepaymentScheduleEntityToDTO)
+                .map(RepaymentScheduleUtils::mapRepaymentScheduleEntityToOutput)
                 .collect(Collectors.toList());
     }
 
-    public static RepaymentScheduleDTO mapRepaymentScheduleEntityToDTO(RepaymentSchedule schedule) {
+    public static RepaymentScheduleDTO mapRepaymentScheduleEntityToOutput(RepaymentSchedule schedule) {
         RepaymentScheduleDTO dto = new RepaymentScheduleDTO();
         dto.setScheduleId(schedule.getScheduleId());
         dto.setInstallmentNumber(schedule.getInstallmentNumber());

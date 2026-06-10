@@ -53,7 +53,7 @@ public class TransactionService implements ITransactionService {
                     .orElseThrow(() -> new OurException("Loan request not found with id: " + loanRequestId));
 
             List<Transaction> transactions = transactionRepository
-                    .findByLoanRequest_RequestId(loanRequestId);
+                    .findByLoanRequest_requestId(loanRequestId);
 
             // --- VALIDATE ---
             if (transactions.isEmpty()) {
@@ -70,6 +70,78 @@ public class TransactionService implements ITransactionService {
         } catch (OurException e) {
             response.setStatusCode(404);
             response.setMessage(e.getMessage());
+        } catch (Exception e) {
+            response.setStatusCode(500);
+            response.setMessage("Error retrieving transactions: " + e.getMessage());
+        }
+        return response;
+    }
+
+    public Response<List<TransactionDTO>> getAllTransactions() {
+        Response<List<TransactionDTO>> response = new Response<>();
+        try {
+            // --- FETCH ---
+            List<Transaction> transactions = transactionRepository.findAll();
+
+            // --- RETURN ---
+            response.setStatusCode(200);
+            response.setMessage("Transactions retrieved successfully");
+            response.setData(TransactionUtils.mapTransactionListToOutput(transactions));
+
+        } catch (Exception e) {
+            response.setStatusCode(500);
+            response.setMessage("Error retrieving transactions: " + e.getMessage());
+        }
+        return response;
+    }
+
+
+    //USER GETS TRANSACTIONS RELATED TO THEIR LOAN REQUEST
+    public Response<List<TransactionDTO>> getMyLoanTransactions(Long loanRequestId, String email) {
+        Response<List<TransactionDTO>> response = new Response<>();
+        try {
+            // --- FETCH ---
+            LoanRequest loanRequest = loanRequestRepository.findById(loanRequestId)
+                    .orElseThrow(() -> new OurException("Loan request not found with id: " + loanRequestId));
+
+            // --- VALIDATE ---
+            if (!loanRequest.getBorrower().getEmail().equals(email)) {
+                response.setStatusCode(403);
+                response.setMessage("You are not authorized to view transactions for this loan");
+                return response;
+            }
+
+            List<Transaction> transactions = transactionRepository
+                    .findByLoanRequest_requestId(loanRequestId);
+
+            // --- RETURN ---
+            response.setStatusCode(200);
+            response.setMessage("Transactions retrieved successfully");
+            response.setData(TransactionUtils.mapTransactionListToOutput(transactions));
+
+        } catch (OurException e) {
+            response.setStatusCode(404);
+            response.setMessage(e.getMessage());
+        } catch (Exception e) {
+            response.setStatusCode(500);
+            response.setMessage("Error retrieving transactions: " + e.getMessage());
+        }
+        return response;
+    }
+
+    //USER GETS ALL THEIR TRANSACTIONS
+    public Response<List<TransactionDTO>> getMyTransactions(String email) {
+        Response<List<TransactionDTO>> response = new Response<>();
+        try {
+            // --- FETCH ---
+            List<Transaction> transactions = transactionRepository
+                    .findBySender_EmailOrReceiver_Email(email,email);
+
+            // --- RETURN ---
+            response.setStatusCode(200);
+            response.setMessage("Transactions retrieved successfully");
+            response.setData(TransactionUtils.mapTransactionListToOutput(transactions));
+
         } catch (Exception e) {
             response.setStatusCode(500);
             response.setMessage("Error retrieving transactions: " + e.getMessage());

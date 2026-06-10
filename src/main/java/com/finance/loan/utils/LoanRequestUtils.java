@@ -1,38 +1,19 @@
 package com.finance.loan.utils;
 
 import com.finance.loan.dto.output.LoanRequestDTO;
-import com.finance.loan.dto.output.UserDTO;
 import com.finance.loan.entity.LoanRequest;
-import com.finance.loan.entity.User;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Utils {
+public class LoanRequestUtils {
 
-    public static UserDTO mapUserEntityToDTO(User user) {
-        UserDTO userDTO = new UserDTO();
-
-        userDTO.setId(user.getId());
-        userDTO.setName(user.getName());
-        userDTO.setEmail(user.getEmail());
-        userDTO.setPhoneNumber(user.getPhoneNumber());
-        userDTO.setRole(user.getRole().name());
-
-        return userDTO;
-    }
-
-    public static List<UserDTO> mapUserListToDTO(List<User> userList) {
-        return userList.stream()
-                .map(Utils::mapUserEntityToDTO)
-                .collect(Collectors.toList());
-    }
 
 
     // method to create loan request out from entity
-    public static LoanRequestDTO mapLoanRequestEntityToDTO(LoanRequest loanRequest) {
+    public static LoanRequestDTO mapLoanRequestEntityToOutput(LoanRequest loanRequest) {
         LoanRequestDTO output = new LoanRequestDTO();
 
         // Basic fields
@@ -79,9 +60,9 @@ public class Utils {
         return output;
     }
 
-    public static List<LoanRequestDTO> mapLoanRequestListToDTO(List<LoanRequest> loanRequestList) {
+    public static List<LoanRequestDTO> mapLoanRequestListToOutput(List<LoanRequest> loanRequestList) {
         return loanRequestList.stream()
-                .map(Utils::mapLoanRequestEntityToDTO)
+                .map(LoanRequestUtils::mapLoanRequestEntityToOutput)
                 .collect(Collectors.toList());
     }
 

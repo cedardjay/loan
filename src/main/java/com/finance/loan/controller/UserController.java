@@ -26,21 +26,21 @@ public class UserController {
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
-    @GetMapping("/get-by-id/{userId}")
+    @GetMapping("/{userId}")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<Response<UserDTO>> getUserById(@PathVariable("userId") long userId) {
         Response<UserDTO> response = userService.getUserById(userId);
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
-    @DeleteMapping("/delete/{userId}")
+    @DeleteMapping("/{userId}/delete")
     @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseEntity<Response<Void>> deleteUser(@PathVariable("userId") long userId) {
         Response<Void> response = userService.deleteUser(userId);
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
-    @PutMapping("/grant-role/{userId}")
+    @PutMapping("/{userId}/grant-role")
     @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseEntity<Response<Void>> grantRole(@PathVariable long userId, @RequestBody String role) {
         Response<Void> response = userService.grantRole(userId, role);
@@ -49,7 +49,7 @@ public class UserController {
 
 
 
-    @GetMapping("/get-logged-in-profile-info")
+    @GetMapping("/my-profile-info")
     public ResponseEntity<Response<UserDTO>> getLoggedInUserProfile() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();

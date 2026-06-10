@@ -11,7 +11,7 @@ import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.UserRepository;
 import com.finance.loan.service.interfac.IUserService;
 import com.finance.loan.utils.JWTUtils;
-import com.finance.loan.utils.Utils;
+import com.finance.loan.utils.UserUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -60,7 +60,7 @@ public class UserService implements IUserService {
             }
 
             User savedUser = userRepository.save(user);
-            UserDTO userDTO = Utils.mapUserEntityToDTO(savedUser);
+            UserDTO userDTO = UserUtils.mapUserEntityToOutput(savedUser);
             response.setStatusCode(200);
             response.setMessage("User registered successfully");
             response.setData(userDTO);
@@ -162,7 +162,7 @@ public class UserService implements IUserService {
             // no validation needed, empty list is a valid result
 
             // --- EXECUTE ---
-            List<UserDTO> userDTOList = Utils.mapUserListToDTO(userList);
+            List<UserDTO> userDTOList = UserUtils.mapUserListToOutput(userList);
 
             // --- RETURN ---
             response.setStatusCode(200);
@@ -219,7 +219,7 @@ public class UserService implements IUserService {
             // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("User fetched successfully");
-            response.setData(Utils.mapUserEntityToDTO(user));
+            response.setData(UserUtils.mapUserEntityToOutput(user));
 
         } catch (OurException e) {
             response.setStatusCode(404);
@@ -243,7 +243,7 @@ public class UserService implements IUserService {
             // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("User info fetched successfully");
-            response.setData(Utils.mapUserEntityToDTO(user));
+            response.setData(UserUtils.mapUserEntityToOutput(user));
 
         } catch (OurException e) {
             response.setStatusCode(404);

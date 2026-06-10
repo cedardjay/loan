@@ -1,6 +1,5 @@
 package com.finance.loan.repo;
 
-import com.finance.loan.entity.User;
 import com.finance.loan.entity.LoanRequest;
 import com.finance.loan.entity.LoanStatus;
 import org.springframework.data.jpa.repository.JpaRepository;

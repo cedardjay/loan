@@ -32,7 +32,7 @@ public class RepaymentScheduleService implements IRepaymentScheduleService {
 
 
     //GET ALL REPAYMENT SCHEDULE BY LOAN REQUEST
-    public Response<List<RepaymentScheduleDTO>> getRepaymentScheduleByLoanRequest(long loanRequestId) {
+    public Response<List<RepaymentScheduleDTO>> getRepaymentScheduleByLoanRequest(Long loanRequestId) {
         Response<List<RepaymentScheduleDTO>> response = new Response<>();
         try {
 
@@ -59,7 +59,41 @@ public class RepaymentScheduleService implements IRepaymentScheduleService {
             // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("Repayment schedule retrieved successfully");
-            response.setData(RepaymentScheduleUtils.mapRepaymentScheduleListToDTO(schedules));
+            response.setData(RepaymentScheduleUtils.mapRepaymentScheduleListToOutput(schedules));
+
+        } catch (OurException e) {
+            response.setStatusCode(404);
+            response.setMessage(e.getMessage());
+        } catch (Exception e) {
+            response.setStatusCode(500);
+            response.setMessage("Error retrieving repayment schedule: " + e.getMessage());
+        }
+        return response;
+    }
+
+
+    //USER TO GET REPAYMENT SCHEDULE FOR THEIR LOAN REQUEST
+    public Response<List<RepaymentScheduleDTO>> getMyRepaymentSchedule(Long loanRequestId, String email) {
+        Response<List<RepaymentScheduleDTO>> response = new Response<>();
+        try {
+            // --- FETCH ---
+            LoanRequest loanRequest = loanRequestRepository.findById(loanRequestId)
+                    .orElseThrow(() -> new OurException("Loan request not found with id: " + loanRequestId));
+
+            // --- VALIDATE ---
+            if (!loanRequest.getBorrower().getEmail().equals(email)) {
+                response.setStatusCode(403);
+                response.setMessage("You are not authorized");
+                return response;
+            }
+
+            List<RepaymentSchedule> schedules = repaymentScheduleRepository
+                    .findByLoanRequest_requestId(loanRequestId);
+
+            // --- RETURN ---
+            response.setStatusCode(200);
+            response.setMessage("Repayment schedule retrieved successfully");
+            response.setData(RepaymentScheduleUtils.mapRepaymentScheduleListToOutput(schedules));
 
         } catch (OurException e) {
             response.setStatusCode(404);

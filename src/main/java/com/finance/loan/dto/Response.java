@@ -1,7 +1,6 @@
 package com.finance.loan.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.finance.loan.dto.output.LoanRequestDTO;
 import lombok.Data;
 
 import java.util.List;

@@ -15,4 +15,10 @@ public interface ITransactionService {
                                    String paymentReference);
 
     Response<List<TransactionDTO>> getTransactionsByLoanRequest(Long loanRequestId);
+
+    Response<List<TransactionDTO>> getAllTransactions();
+
+    Response<List<TransactionDTO>> getMyLoanTransactions(Long loanRequestId, String email);
+
+    Response<List<TransactionDTO>> getMyTransactions(String email);
 }

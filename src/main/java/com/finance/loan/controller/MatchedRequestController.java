@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
@@ -25,14 +26,6 @@ public class MatchedRequestController {
     @Autowired
     private IMatchedRequestService matchedRequestService;
 
-    @PostMapping("/invest/{loanRequestId}")
-    public ResponseEntity<Response<Void>> investInLoan(
-            @PathVariable @NotNull @Positive Long loanRequestId,
-            @Valid @RequestBody InvestRequest investmentRequest) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Response<Void> response = matchedRequestService.investInLoan(loanRequestId, investmentRequest, email);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
-    }
 
     @GetMapping("/portfolio/summary")
     public ResponseEntity<Response<PortfolioSummaryDTO>> getInvestorPortfolioSummary() {
@@ -45,6 +38,13 @@ public class MatchedRequestController {
     public ResponseEntity<Response<List<InvestmentDTO>>> getMyInvestments() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Response<List<InvestmentDTO>> response = matchedRequestService.getMyInvestments(email);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    @GetMapping("/all")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
+    public ResponseEntity<Response<List<InvestmentDTO>>> getAllInvestments() {
+        Response<List<InvestmentDTO>> response = matchedRequestService.getAllInvestments();
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 }

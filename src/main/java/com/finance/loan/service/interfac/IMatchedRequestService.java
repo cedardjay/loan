@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface IMatchedRequestService {
 
-    Response<Void> investInLoan(long loanRequestId, InvestRequest investmentRequest, String email);
+    Response<Void> investInLoan(Long loanRequestId, InvestRequest investmentRequest, String email);
 
     Response<PortfolioSummaryDTO> getInvestorPortfolioSummary(String email);
 

@@ -72,7 +72,7 @@ private IPaymentGatewayService paymentGatewayService;
             // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("Loan request created successfully");
-            response.setData(Utils.mapLoanRequestEntityToDTO(savedRequest));
+            response.setData(LoanRequestUtils.mapLoanRequestEntityToOutput(savedRequest));
 
         } catch (OurException e) {
             response.setStatusCode(404);
@@ -94,7 +94,7 @@ private IPaymentGatewayService paymentGatewayService;
             // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("User's loan requests fetched successfully");
-            response.setData(Utils.mapLoanRequestListToDTO(loanRequests));
+            response.setData(LoanRequestUtils.mapLoanRequestListToOutput(loanRequests));
 
         } catch (OurException e) {
             response.setStatusCode(404);
@@ -125,7 +125,7 @@ private IPaymentGatewayService paymentGatewayService;
             // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("Loan request fetched successfully");
-            response.setData(Utils.mapLoanRequestEntityToDTO(loanRequest));
+            response.setData(LoanRequestUtils.mapLoanRequestEntityToOutput(loanRequest));
 
         } catch (OurException e) {
             response.setStatusCode(404);
@@ -188,7 +188,7 @@ private IPaymentGatewayService paymentGatewayService;
             // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("Loan requests fetched successfully");
-            response.setData(Utils.mapLoanRequestListToDTO(loanRequests));
+            response.setData(LoanRequestUtils.mapLoanRequestListToOutput(loanRequests));
 
         } catch (Exception e) {
             response.setStatusCode(500);
@@ -209,7 +209,7 @@ private IPaymentGatewayService paymentGatewayService;
             // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("Loan request fetched successfully");
-            response.setData(Utils.mapLoanRequestEntityToDTO(loanRequest));
+            response.setData(LoanRequestUtils.mapLoanRequestEntityToOutput(loanRequest));
 
         } catch (OurException e) {
             response.setStatusCode(404);
@@ -235,7 +235,7 @@ private IPaymentGatewayService paymentGatewayService;
             // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("Loan requests fetched successfully");
-            response.setData(Utils.mapLoanRequestListToDTO(loanRequests));
+            response.setData(LoanRequestUtils.mapLoanRequestListToOutput(loanRequests));
 
         } catch (OurException e) {
             response.setStatusCode(404);
@@ -270,7 +270,7 @@ private IPaymentGatewayService paymentGatewayService;
             // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("Loan request approved successfully");
-            response.setData(Utils.mapLoanRequestEntityToDTO(updatedRequest));
+            response.setData(LoanRequestUtils.mapLoanRequestEntityToOutput(updatedRequest));
 
         } catch (OurException e) {
             response.setStatusCode(404);
@@ -305,7 +305,7 @@ private IPaymentGatewayService paymentGatewayService;
             // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("Loan request rejected successfully");
-            response.setData(Utils.mapLoanRequestEntityToDTO(updatedRequest));
+            response.setData(LoanRequestUtils.mapLoanRequestEntityToOutput(updatedRequest));
 
         } catch (OurException e) {
             response.setStatusCode(404);
@@ -332,7 +332,7 @@ private IPaymentGatewayService paymentGatewayService;
             // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("Marketplace loans fetched successfully");
-            response.setData(Utils.mapLoanRequestListToDTO(loanRequests));
+            response.setData(LoanRequestUtils.mapLoanRequestListToOutput(loanRequests));
 
         } catch (Exception e) {
             response.setStatusCode(500);
@@ -394,7 +394,7 @@ private IPaymentGatewayService paymentGatewayService;
             // --- RETURN ---
             response.setStatusCode(200);
             response.setMessage("Loan disbursed successfully. Reference: " + paymentReference);
-            response.setData(Utils.mapLoanRequestEntityToDTO(updatedLoan));
+            response.setData(LoanRequestUtils.mapLoanRequestEntityToOutput(updatedLoan));
 
         } catch (OurException e) {
             response.setStatusCode(404);

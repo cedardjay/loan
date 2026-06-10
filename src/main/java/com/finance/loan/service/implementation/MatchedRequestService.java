@@ -36,7 +36,7 @@ public class MatchedRequestService implements IMatchedRequestService {
     private LoanRequestRepository loanRequestRepository;
 
     @Transactional
-    public Response<Void> investInLoan(long loanRequestId, InvestRequest investmentRequest, String email) {
+    public Response<Void> investInLoan(Long loanRequestId, InvestRequest investmentRequest, String email) {
         Response<Void> response = new Response<>();
         try {
             // --- FETCH ---

@@ -10,5 +10,6 @@ import java.util.List;
 // RepaymentScheduleRepository.java
 @Repository
 public interface RepaymentScheduleRepository extends JpaRepository<RepaymentSchedule, Long> {
-    List<RepaymentSchedule> findByLoanRequest_requestId(long loanRequestId);
+
+    List<RepaymentSchedule> findByLoanRequest_requestId(Long loanRequestId);
 }

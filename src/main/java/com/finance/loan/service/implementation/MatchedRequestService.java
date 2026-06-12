@@ -14,6 +14,7 @@ import com.finance.loan.repo.MatchedRequestRepository;
 import com.finance.loan.repo.UserRepository;
 import com.finance.loan.service.interfac.IMatchedRequestService;
 import com.finance.loan.utils.LoanCalculatorUtils;
+import com.finance.loan.utils.MatchedRequestUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,26 +42,26 @@ public class MatchedRequestService implements IMatchedRequestService {
         try {
             // --- FETCH ---
             User investor = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new OurException("User not found"));
+                    .orElseThrow(() -> new OurException("User not found",404));
 
             LoanRequest loanRequest = loanRequestRepository.findById(loanRequestId)
-                    .orElseThrow(() -> new OurException("Loan request not found"));
+                    .orElseThrow(() -> new OurException("Loan request not found",404));
 
             // --- VALIDATE ---
             if (loanRequest.getBorrower().getId().equals(investor.getId())) {
-                throw new OurException("You cannot invest in your own loan request");
+                throw new OurException("You cannot invest in your own loan request",404);
             }
 
             if (loanRequest.getStatus() != LoanStatus.APPROVED &&
                     loanRequest.getStatus() != LoanStatus.PARTIALLY_FUNDED) {
-                throw new OurException("Loan request is not open for investment");
+                throw new OurException("Loan request is not open for investment",404);
             }
 
             BigDecimal remaining = loanRequest.getRequestedAmount()
                     .subtract(loanRequest.getAmountFunded());
 
             if (investmentRequest.getAmount().compareTo(remaining) > 0) {
-                throw new OurException("Investment amount exceeds remaining capacity of " + remaining);
+                throw new OurException("Investment amount exceeds remaining capacity of " + remaining,422);
             }
 
             // --- EXECUTE ---
@@ -103,10 +104,11 @@ public class MatchedRequestService implements IMatchedRequestService {
         Response<PortfolioSummaryDTO> response = new Response<>();
         try {
             // --- FETCH ---
-            User investor = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new OurException("User not found"));
+            if (!userRepository.existsByEmail(email)) {
+                throw new OurException("User not found",404);
+            }
 
-            List<MatchedRequest> investments = matchedRequestRepository.findByInvestor(investor);
+            List<MatchedRequest> investments = matchedRequestRepository.findByInvestor_email(email);
 
             // --- EXECUTE ---
             BigDecimal totalInvested = investments.stream()
@@ -142,49 +144,48 @@ public class MatchedRequestService implements IMatchedRequestService {
     }
 
 
-    // GET USER INVESTMENTS
-    public Response<List<InvestmentDTO>> getMyInvestments(String email) {
+    // GET MY INVESTMENTS
+    public List<InvestmentDTO> getMyInvestments(String email) {
+        return MatchedRequestUtils.mapMatchedRequestListToOutput(
+                matchedRequestRepository.findByInvestor_email(email)
+        );
+    }
+
+
+    public List<InvestmentDTO> getAllInvestments() {
+        return MatchedRequestUtils.mapMatchedRequestListToOutput(
+                matchedRequestRepository.findAll()
+        );
+    }
+
+    //GET AN INVESTORS INVESTMENT
+    public Response<List<InvestmentDTO>> getInvestmentsByInvestorId(Long investorId) {
         Response<List<InvestmentDTO>> response = new Response<>();
         try {
             // --- FETCH ---
-            User investor = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new OurException("User not found"));
+            if (!userRepository.existsById(investorId)) {
+                throw new OurException("User not found",404);
+            }
 
-            List<MatchedRequest> investments = matchedRequestRepository.findByInvestor(investor);
+            List<MatchedRequest> investments = matchedRequestRepository.findByInvestor_id(investorId);
 
             // --- EXECUTE ---
-            List<InvestmentDTO> investmentList = investments.stream().map(match -> {
-                LoanRequest loan = match.getLoanRequest();
-
-                BigDecimal expectedReturn = LoanCalculatorUtils.calculateExpectedReturn(
-                        match.getInvestorAmount(),
-                        loan.getInterestRate(),
-                        loan.getTermMonths()
-                );
-
-                return InvestmentDTO.builder()
-                        .id(match.getMatchId())
-                        .name(loan.getPurpose())
-                        .amount(match.getInvestorAmount())
-                        .interest(loan.getInterestRate())
-                        .status(loan.getStatus().name())
-                        .investedDate(match.getMatchDate().toLocalDate().toString())
-                        .expectedReturn(expectedReturn)
-                        .build();
-            }).toList();
+            List<InvestmentDTO> investmentList = MatchedRequestUtils.mapMatchedRequestListToOutput(investments);
 
             // --- RETURN ---
             response.setStatusCode(200);
-            response.setMessage("Investments retrieved successfully");
+            response.setMessage("All investments retrieved successfully");
             response.setData(investmentList);
 
         } catch (OurException e) {
             response.setStatusCode(404);
             response.setMessage(e.getMessage());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             response.setStatusCode(500);
             response.setMessage("Error retrieving investments: " + e.getMessage());
         }
         return response;
     }
+
 }

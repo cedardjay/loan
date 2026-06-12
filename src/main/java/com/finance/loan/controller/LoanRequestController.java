@@ -40,18 +40,16 @@ public class LoanRequestController {
 
     // CREATE Loan request
     @PostMapping("/create")
-    public ResponseEntity<Response<LoanRequestDTO>> createLoanRequest(@Valid @RequestBody LoanRequestIN loanRequestIN) {
+    public ResponseEntity<LoanRequestDTO> createLoanRequest(@Valid @RequestBody LoanRequestIN loanRequestIN) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Response<LoanRequestDTO> response = loanRequestService.createLoanRequest(loanRequestIN, email);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+        return ResponseEntity.ok(loanRequestService.createLoanRequest(loanRequestIN, email));
     }
 
     // GET MY REQUESTS
     @GetMapping("/my-requests/all")
-    public ResponseEntity<Response<List<LoanRequestDTO>>> getMyLoanRequests() {
+    public ResponseEntity<List<LoanRequestDTO>> getMyLoanRequests() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Response<List<LoanRequestDTO>> response = loanRequestService.getLoanRequestsByBorrowerEmail(email);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+        return ResponseEntity.ok(loanRequestService.getLoanRequestsByBorrowerEmail(email));
     }
 
     // GET MY REQUEST BY ID

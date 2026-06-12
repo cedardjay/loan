@@ -50,7 +50,7 @@ public class TransactionService implements ITransactionService {
         try {
             // --- FETCH ---
             loanRequestRepository.findById(loanRequestId)
-                    .orElseThrow(() -> new OurException("Loan request not found with id: " + loanRequestId));
+                    .orElseThrow(() -> new OurException("Loan request not found with id: " + loanRequestId,404));
 
             List<Transaction> transactions = transactionRepository
                     .findByLoanRequest_requestId(loanRequestId);
@@ -102,7 +102,7 @@ public class TransactionService implements ITransactionService {
         try {
             // --- FETCH ---
             LoanRequest loanRequest = loanRequestRepository.findById(loanRequestId)
-                    .orElseThrow(() -> new OurException("Loan request not found with id: " + loanRequestId));
+                    .orElseThrow(() -> new OurException("Loan request not found with id: " + loanRequestId,404));
 
             // --- VALIDATE ---
             if (!loanRequest.getBorrower().getEmail().equals(email)) {

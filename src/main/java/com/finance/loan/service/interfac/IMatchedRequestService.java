@@ -13,6 +13,9 @@ public interface IMatchedRequestService {
 
     Response<PortfolioSummaryDTO> getInvestorPortfolioSummary(String email);
 
-    Response<List<InvestmentDTO>> getMyInvestments(String email);
+    List<InvestmentDTO> getMyInvestments(String email);
 
+    List<InvestmentDTO>getAllInvestments();
+
+    Response<List<InvestmentDTO>> getInvestmentsByInvestorId(Long investorId);
 }

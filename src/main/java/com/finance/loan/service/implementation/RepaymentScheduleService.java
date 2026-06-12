@@ -38,7 +38,7 @@ public class RepaymentScheduleService implements IRepaymentScheduleService {
 
             // --- FETCH ---
             if (!loanRequestRepository.existsById(loanRequestId)) {
-                throw new OurException("Loan request not found");
+                throw new OurException("Loan request not found",404);
             }
             List<RepaymentSchedule> schedules = repaymentScheduleRepository
                     .findByLoanRequest_requestId(loanRequestId);
@@ -78,7 +78,7 @@ public class RepaymentScheduleService implements IRepaymentScheduleService {
         try {
             // --- FETCH ---
             LoanRequest loanRequest = loanRequestRepository.findById(loanRequestId)
-                    .orElseThrow(() -> new OurException("Loan request not found with id: " + loanRequestId));
+                    .orElseThrow(() -> new OurException("Loan request not found with id: " + loanRequestId,404));
 
             // --- VALIDATE ---
             if (!loanRequest.getBorrower().getEmail().equals(email)) {

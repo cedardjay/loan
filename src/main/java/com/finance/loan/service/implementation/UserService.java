@@ -42,7 +42,7 @@ public class UserService implements IUserService {
         try {
             // check if email already exists
             if (userRepository.existsByEmail(registerRequest.getEmail())) {
-                throw new OurException(registerRequest.getEmail() + " already exists");
+                throw new OurException(registerRequest.getEmail() + " already exists",404);
             }
 
             // build User entity from RegisterRequest
@@ -89,7 +89,7 @@ public class UserService implements IUserService {
             );
 
             User user = userRepository.findByEmail(loginRequest.getEmail())
-                    .orElseThrow(() -> new OurException("User not found"));
+                    .orElseThrow(() -> new OurException("User not found",404));
 
             // --- EXECUTE ---
             String token = jwtUtils.generateToken(user);
@@ -121,7 +121,7 @@ public class UserService implements IUserService {
         try {
             // --- FETCH ---
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new OurException("User not found"));
+                    .orElseThrow(() -> new OurException("User not found",404));
 
             // --- VALIDATE ---
             Role newRole = Role.valueOf(role.toUpperCase());
@@ -183,7 +183,7 @@ public class UserService implements IUserService {
         try {
             // --- FETCH ---
             userRepository.findById(userId)
-                    .orElseThrow(() -> new OurException("User not found"));
+                    .orElseThrow(() -> new OurException("User not found",404));
 
             // --- VALIDATE ---
             // existence check handled above
@@ -214,7 +214,7 @@ public class UserService implements IUserService {
         try {
             // --- FETCH ---
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new OurException("User not found"));
+                    .orElseThrow(() -> new OurException("User not found",404));
 
             // --- RETURN ---
             response.setStatusCode(200);
@@ -238,7 +238,7 @@ public class UserService implements IUserService {
         try {
             // --- FETCH ---
             User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new OurException("User not found"));
+                    .orElseThrow(() -> new OurException("User not found",404));
 
             // --- RETURN ---
             response.setStatusCode(200);

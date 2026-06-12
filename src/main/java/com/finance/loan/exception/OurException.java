@@ -1,8 +1,13 @@
 package com.finance.loan.exception;
 
-public class OurException extends RuntimeException {
+import lombok.Getter;
 
-    public OurException(String message) {
+@Getter
+public class OurException extends RuntimeException {
+    private final int status;
+
+    public OurException(String message, int status) {
         super(message);
+        this.status = status;
     }
 }

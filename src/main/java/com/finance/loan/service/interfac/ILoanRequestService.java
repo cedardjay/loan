@@ -8,13 +8,13 @@ import java.util.List;
 
 public interface ILoanRequestService {
 
-    Response<LoanRequestDTO> createLoanRequest(LoanRequestIN requestDTO, String email);
+    LoanRequestDTO createLoanRequest(LoanRequestIN requestDTO, String email);
 
-    Response<List<LoanRequestDTO>> getLoanRequestsByBorrowerEmail(String email);
+    List<LoanRequestDTO> getLoanRequestsByBorrowerEmail(String email);
 
-    Response<LoanRequestDTO> getMyLoanRequestById(Long requestId, String email);
+    LoanRequestDTO getMyLoanRequestById(Long requestId, String email);
 
-    Response<Void> deleteLoanRequest(Long requestId, String email);
+    Void deleteLoanRequest(Long requestId, String email);
 
     Response<List<LoanRequestDTO>> getAllLoanRequests();
 

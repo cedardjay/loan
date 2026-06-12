@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 public class MatchedRequestUtils {
 
-    public static InvestmentDTO mapMatchedRequestToInvestmentDTO(MatchedRequest match) {
+    public static InvestmentDTO mapMatchedRequestEntityToOutput(MatchedRequest match) {
         InvestmentDTO dto = new InvestmentDTO();
         LoanRequest loan = match.getLoanRequest();
 
@@ -48,9 +48,9 @@ public class MatchedRequestUtils {
         return dto;
     }
 
-    public static List<InvestmentDTO> mapMatchedRequestListToInvestmentDTOList(List<MatchedRequest> matches) {
+    public static List<InvestmentDTO> mapMatchedRequestListToOutput(List<MatchedRequest> matches) {
         return matches.stream()
-                .map(MatchedRequestUtils::mapMatchedRequestToInvestmentDTO)
+                .map(MatchedRequestUtils::mapMatchedRequestEntityToOutput)
                 .collect(Collectors.toList());
     }
 }

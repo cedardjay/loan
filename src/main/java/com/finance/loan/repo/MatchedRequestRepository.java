@@ -10,5 +10,8 @@ import java.util.List;
 @Repository
 public interface MatchedRequestRepository extends JpaRepository<MatchedRequest, Long> {
 
-    List<MatchedRequest> findByInvestor(User investor);
+
+    List<MatchedRequest> findByInvestor_id(Long investorId);
+
+    List<MatchedRequest> findByInvestor_email(String email);
 }

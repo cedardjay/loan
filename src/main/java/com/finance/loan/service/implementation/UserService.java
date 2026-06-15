@@ -2,8 +2,7 @@ package com.finance.loan.service.implementation;
 
 import com.finance.loan.dto.input.LoginRequest;
 import com.finance.loan.dto.input.RegisterRequest;
-import com.finance.loan.dto.Response;
-import com.finance.loan.dto.output.LoginDTO;
+import com.finance.loan.dto.output.LoginResponseDTO;
 import com.finance.loan.dto.output.UserDTO;
 import com.finance.loan.entity.Role;
 import com.finance.loan.entity.User;
@@ -37,221 +36,103 @@ public class UserService implements IUserService {
 
 
     @Override
-    public Response<UserDTO> register(RegisterRequest registerRequest) {
-        Response<UserDTO> response = new Response<>();
-        try {
-            // check if email already exists
-            if (userRepository.existsByEmail(registerRequest.getEmail())) {
-                throw new OurException(registerRequest.getEmail() + " already exists",404);
-            }
-
-            // build User entity from RegisterRequest
-            User user = new User();
-            user.setName(registerRequest.getName());
-            user.setEmail(registerRequest.getEmail());
-            user.setPhoneNumber(registerRequest.getPhoneNumber());
-            user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-
-            long userCount = userRepository.count(); //count the number of users in the database
-            if (userCount == 0) {
-                user.setRole(Role.SUPERADMIN);  // first ever registration = SUPERADMIN
-            } else {
-                user.setRole(Role.USER);  // everyone else = USER by default
-            }
-
-            User savedUser = userRepository.save(user);
-            UserDTO userDTO = UserUtils.mapUserEntityToOutput(savedUser);
-            response.setStatusCode(200);
-            response.setMessage("User registered successfully");
-            response.setData(userDTO);
-
-        } catch (OurException e) {
-            response.setStatusCode(400);
-            response.setMessage(e.getMessage());
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error occurred during registration: " + e.getMessage());
+    public UserDTO register(RegisterRequest registerRequest) {
+        // --- VALIDATE ---
+        if (userRepository.existsByEmail(registerRequest.getEmail())) {
+            throw new OurException(registerRequest.getEmail() + " already exists", 400);
         }
-        return response;
+
+        // --- EXECUTE ---
+        User user = new User();
+        user.setName(registerRequest.getName());
+        user.setEmail(registerRequest.getEmail());
+        user.setPhoneNumber(registerRequest.getPhoneNumber());
+        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        user.setRole(userRepository.count() == 0 ? Role.SUPERADMIN : Role.USER);
+
+        // --- RETURN ---
+        return UserUtils.mapUserEntityToOutput(userRepository.save(user));
     }
 
 
     @Override
-    public Response<LoginDTO> login(LoginRequest loginRequest) {
-        Response<LoginDTO> response = new Response<>();
-        try {
-            // --- FETCH ---
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getEmail(),
-                            loginRequest.getPassword()
-                    )
-            );
+    public LoginResponseDTO login(LoginRequest loginRequest) {
+        // --- EXECUTE ---
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getEmail(),
+                        loginRequest.getPassword()
+                )
+        );
 
-            User user = userRepository.findByEmail(loginRequest.getEmail())
-                    .orElseThrow(() -> new OurException("User not found",404));
+        User user = userRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new OurException("User not found", 404));
 
-            // --- EXECUTE ---
-            String token = jwtUtils.generateToken(user);
-
-            LoginDTO loginDTO = LoginDTO.builder()
-                    .token(token)
-                    .role(user.getRole().name())
-                    .expirationTime("7 Days")
-                    .build();
-
-            // --- RETURN ---
-            response.setStatusCode(200);
-            response.setMessage("Login successful");
-            response.setData(loginDTO);
-
-        } catch (OurException e) {
-            response.setStatusCode(404);
-            response.setMessage(e.getMessage());
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error occurred during login: " + e.getMessage());
-        }
-        return response;
+        // --- RETURN ---
+        return LoginResponseDTO.builder()
+                .token(jwtUtils.generateToken(user))
+                .role(user.getRole().name())
+                .expirationTime("7 Days")
+                .build();
     }
 
+
     @Override
-    public Response<Void> grantRole(long userId, String role) {
-        Response<Void> response = new Response<>();
+    public void grantRole(long userId, String role) {
+        // --- FETCH ---
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new OurException("User not found", 404));
+
+        // --- VALIDATE ---
+        Role newRole;
         try {
-            // --- FETCH ---
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new OurException("User not found",404));
-
-            // --- VALIDATE ---
-            Role newRole = Role.valueOf(role.toUpperCase());
-
-            // --- EXECUTE ---
-            user.setRole(newRole);
-
-            // --- PERSIST ---
-            userRepository.save(user);
-
-            // --- RETURN ---
-            response.setStatusCode(200);
-            response.setMessage("Role updated successfully");
-
+            newRole = Role.valueOf(role.toUpperCase());
         } catch (IllegalArgumentException e) {
-            response.setStatusCode(400);
-            response.setMessage("Invalid role: " + role);
-        } catch (OurException e) {
-            response.setStatusCode(404);
-            response.setMessage(e.getMessage());
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error updating role: " + e.getMessage());
+            throw new OurException("Invalid role: " + role, 400);
         }
-        return response;
-    }
 
-
-
-    @Override
-    public Response<List<UserDTO>> getAllUsers() {
-        Response<List<UserDTO>> response = new Response<>();
-        try {
-            // --- FETCH ---
-            List<User> userList = userRepository.findAll();
-
-            // --- VALIDATE ---
-            // no validation needed, empty list is a valid result
-
-            // --- EXECUTE ---
-            List<UserDTO> userDTOList = UserUtils.mapUserListToOutput(userList);
-
-            // --- RETURN ---
-            response.setStatusCode(200);
-            response.setMessage("Users fetched successfully");
-            response.setData(userDTOList);
-
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error getting all users: " + e.getMessage());
-        }
-        return response;
+        // --- PERSIST ---
+        user.setRole(newRole);
+        userRepository.save(user);
     }
 
 
     @Override
-    public Response<Void> deleteUser(long userId) {
-        Response<Void> response = new Response<>();
-        try {
-            // --- FETCH ---
-            userRepository.findById(userId)
-                    .orElseThrow(() -> new OurException("User not found",404));
-
-            // --- VALIDATE ---
-            // existence check handled above
-
-            // --- EXECUTE ---
-            // no computation needed
-
-            // --- PERSIST ---
-            userRepository.deleteById(userId);
-
-            // --- RETURN ---
-            response.setStatusCode(200);
-            response.setMessage("User deleted successfully");
-
-        } catch (OurException e) {
-            response.setStatusCode(404);
-            response.setMessage(e.getMessage());
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error deleting user: " + e.getMessage());
-        }
-        return response;
-    }
-
-    @Override
-    public Response<UserDTO> getUserById(Long userId) {
-        Response<UserDTO> response = new Response<>();
-        try {
-            // --- FETCH ---
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new OurException("User not found",404));
-
-            // --- RETURN ---
-            response.setStatusCode(200);
-            response.setMessage("User fetched successfully");
-            response.setData(UserUtils.mapUserEntityToOutput(user));
-
-        } catch (OurException e) {
-            response.setStatusCode(404);
-            response.setMessage(e.getMessage());
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error getting user: " + e.getMessage());
-        }
-        return response;
+    public List<UserDTO> getAllUsers() {
+        return UserUtils.mapUserListToOutput(userRepository.findAll());
     }
 
 
     @Override
-    public Response<UserDTO> getMyInfo(String email) {
-        Response<UserDTO> response = new Response<>();
-        try {
-            // --- FETCH ---
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new OurException("User not found",404));
-
-            // --- RETURN ---
-            response.setStatusCode(200);
-            response.setMessage("User info fetched successfully");
-            response.setData(UserUtils.mapUserEntityToOutput(user));
-
-        } catch (OurException e) {
-            response.setStatusCode(404);
-            response.setMessage(e.getMessage());
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error getting user info: " + e.getMessage());
+    public void deleteUser(long userId) {
+        // --- FETCH ---
+        if (!userRepository.existsById(userId)) {
+            throw new OurException("User not found", 404);
         }
-        return response;
+
+        // --- PERSIST ---
+        userRepository.deleteById(userId);
+    }
+
+
+    @Override
+    public UserDTO getUserById(Long userId) {
+        // --- FETCH ---
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new OurException("User not found", 404));
+
+        // --- RETURN ---
+        return UserUtils.mapUserEntityToOutput(user);
+    }
+
+
+    @Override
+    public UserDTO getMyInfo(String email) {
+        // --- FETCH ---
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new OurException("User not found", 404));
+
+        // --- RETURN ---
+        return UserUtils.mapUserEntityToOutput(user);
     }
 }

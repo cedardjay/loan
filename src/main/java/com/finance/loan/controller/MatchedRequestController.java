@@ -1,7 +1,6 @@
 package com.finance.loan.controller;
 
 
-import com.finance.loan.dto.Response;
 import com.finance.loan.dto.output.InvestmentDTO;
 import com.finance.loan.dto.output.PortfolioSummaryDTO;
 import com.finance.loan.service.interfac.IMatchedRequestService;
@@ -25,17 +24,15 @@ public class MatchedRequestController {
 
 
     @GetMapping("/portfolio-summary")
-    public ResponseEntity<Response<PortfolioSummaryDTO>> getInvestorPortfolioSummary() {
+    public ResponseEntity<PortfolioSummaryDTO> getInvestorPortfolioSummary() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Response<PortfolioSummaryDTO> response = matchedRequestService.getInvestorPortfolioSummary(email);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+        return ResponseEntity.ok(matchedRequestService.getInvestorPortfolioSummary(email));
     }
 
     @GetMapping("/my-investments")
     public ResponseEntity<List<InvestmentDTO>> getMyInvestments() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return ResponseEntity.ok(matchedRequestService.getMyInvestments(email)
-        );
+        return ResponseEntity.ok(matchedRequestService.getMyInvestments(email));
     }
 
     @GetMapping("/investments/all")
@@ -46,10 +43,7 @@ public class MatchedRequestController {
 
     @GetMapping("/{investorId}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
-    public ResponseEntity<Response<List<InvestmentDTO>>> getInvestmentsByInvestorId(@PathVariable Long investorId) {
-        Response<List<InvestmentDTO>> response = matchedRequestService.getInvestmentsByInvestorId(investorId);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+    public ResponseEntity<List<InvestmentDTO>> getInvestmentsByInvestorId(@PathVariable Long investorId) {
+        return ResponseEntity.ok(matchedRequestService.getInvestmentsByInvestorId(investorId));
     }
-
-
 }

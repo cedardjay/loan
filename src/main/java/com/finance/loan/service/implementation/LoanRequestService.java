@@ -7,7 +7,6 @@ import com.finance.loan.entity.*;
 import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.LoanRequestRepository;
 import com.finance.loan.repo.UserRepository;
-import com.finance.loan.dto.Response;
 import com.finance.loan.service.interfac.ILoanRequestService;
 import com.finance.loan.service.interfac.IPaymentGatewayService;
 import com.finance.loan.service.interfac.IRepaymentScheduleService;
@@ -100,11 +99,11 @@ private IPaymentGatewayService paymentGatewayService;
 
 
     // DELETE
-    public Void deleteLoanRequest(Long requestId, String email) {
+    public void deleteLoanRequest(Long requestId, String email) {
 
-            // --- FETCH ---
-            LoanRequest loanRequest = loanRequestRepository.findById(requestId)
-                    .orElseThrow(() -> new OurException("Loan request not found",404));
+        // --- FETCH ---
+        LoanRequest loanRequest = loanRequestRepository.findById(requestId)
+                .orElseThrow(() -> new OurException("Loan request not found", 404));
 
         // --- VALIDATE ---
         if (!loanRequest.getBorrower().getEmail().equals(email)) {
@@ -116,239 +115,135 @@ private IPaymentGatewayService paymentGatewayService;
             throw new OurException("Cannot delete a loan request that has been funded", 400);
         }
 
-            // --- PERSIST ---
-            loanRequestRepository.delete(loanRequest);
+        // --- PERSIST ---
+        loanRequestRepository.delete(loanRequest);
 
     }
 
-
     // GET ALL LOAN REQUESTS (ADMIN and SUPERADMIN)
-    public Response<List<LoanRequestDTO>> getAllLoanRequests() {
-        Response<List<LoanRequestDTO>> response = new Response<>();
-        try {
-            // --- FETCH ---
-            List<LoanRequest> loanRequests = loanRequestRepository.findAll();
-
-            // --- RETURN ---
-            response.setStatusCode(200);
-            response.setMessage("Loan requests fetched successfully");
-            response.setData(LoanRequestUtils.mapLoanRequestListToOutput(loanRequests));
-
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error fetching loan requests: " + e.getMessage());
-        }
-        return response;
+    public List<LoanRequestDTO> getAllLoanRequests() {
+        return LoanRequestUtils.mapLoanRequestListToOutput(loanRequestRepository.findAll());
     }
 
 
     // GET REQUEST BY ID OF REQUEST (ADMIN and SUPERADMIN)
-    public Response<LoanRequestDTO> getLoanRequestById(Long requestId) {
-        Response<LoanRequestDTO> response = new Response<>();
-        try {
-            // --- FETCH ---
-            LoanRequest loanRequest = loanRequestRepository.findById(requestId)
-                    .orElseThrow(() -> new OurException("Loan request not found with id: " + requestId,404));
+    public LoanRequestDTO getLoanRequestById(Long requestId) {
+        // --- FETCH ---
+        LoanRequest loanRequest = loanRequestRepository.findById(requestId)
+                .orElseThrow(() -> new OurException("Loan request not found with id: " + requestId, 404));
 
-            // --- RETURN ---
-            response.setStatusCode(200);
-            response.setMessage("Loan request fetched successfully");
-            response.setData(LoanRequestUtils.mapLoanRequestEntityToOutput(loanRequest));
-
-        } catch (OurException e) {
-            response.setStatusCode(404);
-            response.setMessage(e.getMessage());
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error fetching loan request: " + e.getMessage());
-        }
-        return response;
+        // --- RETURN ---
+        return LoanRequestUtils.mapLoanRequestEntityToOutput(loanRequest);
     }
 
 
     // GET LOAN REQUESTS BY BORROWER ID (ADMIN and SUPERADMIN)
-    public Response<List<LoanRequestDTO>> getLoanRequestsByBorrowerId(Long borrowerId) {
-        Response<List<LoanRequestDTO>> response = new Response<>();
-        try {
-            // --- FETCH ---
-            userRepository.findById(borrowerId)
-                    .orElseThrow(() -> new OurException("User not found with id: " + borrowerId,404));
-
-            List<LoanRequest> loanRequests = loanRequestRepository.findByBorrower_Id(borrowerId);
-
-            // --- RETURN ---
-            response.setStatusCode(200);
-            response.setMessage("Loan requests fetched successfully");
-            response.setData(LoanRequestUtils.mapLoanRequestListToOutput(loanRequests));
-
-        } catch (OurException e) {
-            response.setStatusCode(404);
-            response.setMessage(e.getMessage());
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error fetching loan requests: " + e.getMessage());
+    public List<LoanRequestDTO> getLoanRequestsByBorrowerId(Long borrowerId) {
+        // --- FETCH ---
+        if (!userRepository.existsById(borrowerId)) {
+            throw new OurException("User not found with id: " + borrowerId, 404);
         }
-        return response;
+
+        // --- RETURN ---
+        return LoanRequestUtils.mapLoanRequestListToOutput(
+                loanRequestRepository.findByBorrower_Id(borrowerId));
     }
 
 
     // APPROVE LOAN REQUEST (ADMIN / SUPERADMIN)
-    public Response<LoanRequestDTO> approveLoanRequest(Long requestId) {
-        Response<LoanRequestDTO> response = new Response<>();
-        try {
-            // --- FETCH ---
-            LoanRequest loanRequest = loanRequestRepository.findById(requestId)
-                    .orElseThrow(() -> new OurException("Loan request not found with id: " + requestId,404));
+    public LoanRequestDTO approveLoanRequest(Long requestId) {
+        // --- FETCH ---
+        LoanRequest loanRequest = loanRequestRepository.findById(requestId)
+                .orElseThrow(() -> new OurException("Loan request not found with id: " + requestId, 404));
 
-            // --- VALIDATE ---
-            if (loanRequest.getStatus() != LoanStatus.PENDING_APPROVAL) {
-                response.setStatusCode(400);
-                response.setMessage("Only pending loan requests can be approved");
-                return response;
-            }
-
-            // --- PERSIST ---
-            loanRequest.setStatus(LoanStatus.APPROVED);
-            LoanRequest updatedRequest = loanRequestRepository.save(loanRequest);
-
-            // --- RETURN ---
-            response.setStatusCode(200);
-            response.setMessage("Loan request approved successfully");
-            response.setData(LoanRequestUtils.mapLoanRequestEntityToOutput(updatedRequest));
-
-        } catch (OurException e) {
-            response.setStatusCode(404);
-            response.setMessage(e.getMessage());
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error approving loan request: " + e.getMessage());
+        // --- VALIDATE ---
+        if (loanRequest.getStatus() != LoanStatus.PENDING_APPROVAL) {
+            throw new OurException("Only pending loan requests can be approved", 400);
         }
-        return response;
+
+        // --- PERSIST ---
+        loanRequest.setStatus(LoanStatus.APPROVED);
+        LoanRequest updatedRequest = loanRequestRepository.save(loanRequest);
+
+        // --- RETURN ---
+        return LoanRequestUtils.mapLoanRequestEntityToOutput(updatedRequest);
     }
 
 
     // REJECT LOAN REQUEST (ADMIN / SUPERADMIN)
-    public Response<LoanRequestDTO> rejectLoanRequest(Long requestId) {
-        Response<LoanRequestDTO> response = new Response<>();
-        try {
-            // --- FETCH ---
-            LoanRequest loanRequest = loanRequestRepository.findById(requestId)
-                    .orElseThrow(() -> new OurException("Loan request not found with id: " + requestId,404));
+    public LoanRequestDTO rejectLoanRequest(Long requestId) {
+        // --- FETCH ---
+        LoanRequest loanRequest = loanRequestRepository.findById(requestId)
+                .orElseThrow(() -> new OurException("Loan request not found with id: " + requestId, 404));
 
-            // --- VALIDATE ---
-            if (loanRequest.getStatus() != LoanStatus.PENDING_APPROVAL) {
-                response.setStatusCode(400);
-                response.setMessage("Only pending loan requests can be rejected");
-                return response;
-            }
-
-            // --- PERSIST ---
-            loanRequest.setStatus(LoanStatus.REJECTED);
-            LoanRequest updatedRequest = loanRequestRepository.save(loanRequest);
-
-            // --- RETURN ---
-            response.setStatusCode(200);
-            response.setMessage("Loan request rejected successfully");
-            response.setData(LoanRequestUtils.mapLoanRequestEntityToOutput(updatedRequest));
-
-        } catch (OurException e) {
-            response.setStatusCode(404);
-            response.setMessage(e.getMessage());
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error rejecting loan request: " + e.getMessage());
+        // --- VALIDATE ---
+        if (loanRequest.getStatus() != LoanStatus.PENDING_APPROVAL) {
+            throw new OurException("Only pending loan requests can be rejected", 400);
         }
-        return response;
+
+        // --- PERSIST ---
+        loanRequest.setStatus(LoanStatus.REJECTED);
+        LoanRequest updatedRequest = loanRequestRepository.save(loanRequest);
+
+        // --- RETURN ---
+        return LoanRequestUtils.mapLoanRequestEntityToOutput(updatedRequest);
     }
 
 
     // GET MARKETPLACE LOANS
-    public Response<List<LoanRequestDTO>> getMarketplaceLoans() {
-        Response<List<LoanRequestDTO>> response = new Response<>();
-        try {
-            // --- FETCH ---
-            List<LoanRequest> loanRequests = loanRequestRepository.findByStatusIn(List.of(
-                    LoanStatus.APPROVED,
-                    LoanStatus.PARTIALLY_FUNDED,
-                    LoanStatus.FULLY_FUNDED
-            ));
-
-            // --- RETURN ---
-            response.setStatusCode(200);
-            response.setMessage("Marketplace loans fetched successfully");
-            response.setData(LoanRequestUtils.mapLoanRequestListToOutput(loanRequests));
-
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error fetching marketplace loans: " + e.getMessage());
-        }
-        return response;
+    public List<LoanRequestDTO> getMarketplaceLoans() {
+        return LoanRequestUtils.mapLoanRequestListToOutput(
+                loanRequestRepository.findByStatusIn(List.of(
+                        LoanStatus.APPROVED,
+                        LoanStatus.PARTIALLY_FUNDED,
+                        LoanStatus.FULLY_FUNDED
+                )));
     }
 
 
     // DISBURSE LOAN
     @Transactional
-    public Response<LoanRequestDTO> disburseLoan(Long requestId, String adminEmail) {
-        Response<LoanRequestDTO> response = new Response<>();
-        try {
-            // --- FETCH ---
-            User admin = userRepository.findByEmail(adminEmail)
-                    .orElseThrow(() -> new OurException("Admin user not found",404));
+    public LoanRequestDTO disburseLoan(Long requestId, String adminEmail) {
+        // --- FETCH ---
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new OurException("Admin user not found", 404));
 
-            LoanRequest loanRequest = loanRequestRepository.findById(requestId)
-                    .orElseThrow(() -> new OurException("Loan request not found with id: " + requestId,404));
+        LoanRequest loanRequest = loanRequestRepository.findById(requestId)
+                .orElseThrow(() -> new OurException("Loan request not found with id: " + requestId, 404));
 
-            // --- VALIDATE ---///////to come back add other constraints
-            if (loanRequest.getStatus() != LoanStatus.FULLY_FUNDED) {
-                response.setStatusCode(400);
-                response.setMessage("Only fully funded loan requests can be disbursed");
-                return response;
-            }
-
-            if (loanRequest.getBorrower() == null) {
-                response.setStatusCode(400);
-                response.setMessage("No borrower linked to this loan request");
-                return response;
-            }
-
-            // --- EXECUTE ---
-            String paymentReference = "DISB-" + UUID.randomUUID().toString().toUpperCase();
-            PaymentResult result = paymentGatewayService.disburse(
-                    loanRequest.getRequestedAmount(),
-                    loanRequest.getBorrower(),
-                    paymentReference
-            );
-
-            if (!result.isSuccessful()) {
-                response.setStatusCode(400);
-                response.setMessage("Payment gateway failed: " + result.getErrorMessage());
-                return response;
-            }
-
-            // --- PERSIST ---
-            transactionService.recordDisbursement(
-                    admin, loanRequest.getBorrower(), loanRequest,
-                    loanRequest.getRequestedAmount(), paymentReference);
-
-            repaymentScheduleService.generateSchedule(loanRequest);
-
-            loanRequest.setStatus(LoanStatus.ACTIVE);
-            LoanRequest updatedLoan = loanRequestRepository.save(loanRequest);
-
-            // --- RETURN ---
-            response.setStatusCode(200);
-            response.setMessage("Loan disbursed successfully. Reference: " + paymentReference);
-            response.setData(LoanRequestUtils.mapLoanRequestEntityToOutput(updatedLoan));
-
-        } catch (OurException e) {
-            response.setStatusCode(404);
-            response.setMessage(e.getMessage());
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error disbursing loan: " + e.getMessage());
-            throw new RuntimeException(e);
+        // --- VALIDATE ---
+        if (loanRequest.getStatus() != LoanStatus.FULLY_FUNDED) {
+            throw new OurException("Only fully funded loan requests can be disbursed", 400);
         }
-        return response;
+
+        if (loanRequest.getBorrower() == null) {
+            throw new OurException("No borrower linked to this loan request", 400);
+        }
+
+        // --- EXECUTE ---
+        String paymentReference = "DISB-" + UUID.randomUUID().toString().toUpperCase();
+        PaymentResult result = paymentGatewayService.disburse(
+                loanRequest.getRequestedAmount(),
+                loanRequest.getBorrower(),
+                paymentReference
+        );
+
+        if (!result.isSuccessful()) {
+            throw new OurException("Payment gateway failed: " + result.getErrorMessage(), 400);
+        }
+
+        // --- PERSIST ---
+        transactionService.recordDisbursement(
+                admin, loanRequest.getBorrower(), loanRequest,
+                loanRequest.getRequestedAmount(), paymentReference);
+
+        repaymentScheduleService.generateSchedule(loanRequest);
+
+        loanRequest.setStatus(LoanStatus.ACTIVE);
+        LoanRequest updatedLoan = loanRequestRepository.save(loanRequest);
+
+        // --- RETURN ---
+        return LoanRequestUtils.mapLoanRequestEntityToOutput(updatedLoan);
     }
 
 }

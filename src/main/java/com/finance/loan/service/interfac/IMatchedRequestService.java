@@ -1,7 +1,6 @@
 package com.finance.loan.service.interfac;
 
 import com.finance.loan.dto.input.InvestRequest;
-import com.finance.loan.dto.Response;
 import com.finance.loan.dto.output.InvestmentDTO;
 import com.finance.loan.dto.output.PortfolioSummaryDTO;
 
@@ -9,13 +8,15 @@ import java.util.List;
 
 public interface IMatchedRequestService {
 
-    Response<Void> investInLoan(Long loanRequestId, InvestRequest investmentRequest, String email);
 
-    Response<PortfolioSummaryDTO> getInvestorPortfolioSummary(String email);
+
+    PortfolioSummaryDTO getInvestorPortfolioSummary(String email);
 
     List<InvestmentDTO> getMyInvestments(String email);
 
-    List<InvestmentDTO>getAllInvestments();
+    List<InvestmentDTO> getAllInvestments();
 
-    Response<List<InvestmentDTO>> getInvestmentsByInvestorId(Long investorId);
+    List<InvestmentDTO> getInvestmentsByInvestorId(Long investorId);
+
+    void investInLoan(Long loanRequestId,  InvestRequest investmentRequest, String email);
 }

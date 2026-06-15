@@ -1,7 +1,6 @@
 package com.finance.loan.service.implementation;
 
 import com.finance.loan.dto.input.InvestRequest;
-import com.finance.loan.dto.Response;
 import com.finance.loan.dto.output.InvestmentDTO;
 import com.finance.loan.dto.output.PortfolioSummaryDTO;
 import com.finance.loan.entity.LoanRequest;
@@ -13,7 +12,6 @@ import com.finance.loan.repo.LoanRequestRepository;
 import com.finance.loan.repo.MatchedRequestRepository;
 import com.finance.loan.repo.UserRepository;
 import com.finance.loan.service.interfac.IMatchedRequestService;
-import com.finance.loan.utils.LoanCalculatorUtils;
 import com.finance.loan.utils.MatchedRequestUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,114 +35,82 @@ public class MatchedRequestService implements IMatchedRequestService {
     private LoanRequestRepository loanRequestRepository;
 
     @Transactional
-    public Response<Void> investInLoan(Long loanRequestId, InvestRequest investmentRequest, String email) {
-        Response<Void> response = new Response<>();
-        try {
-            // --- FETCH ---
-            User investor = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new OurException("User not found",404));
+    public void investInLoan(Long loanRequestId, InvestRequest investmentRequest, String email) {
+        // --- FETCH ---
+        User investor = userRepository.findByEmail(email)
+                .orElseThrow(() -> new OurException("User not found", 404));
 
-            LoanRequest loanRequest = loanRequestRepository.findById(loanRequestId)
-                    .orElseThrow(() -> new OurException("Loan request not found",404));
+        LoanRequest loanRequest = loanRequestRepository.findById(loanRequestId)
+                .orElseThrow(() -> new OurException("Loan request not found", 404));
 
-            // --- VALIDATE ---
-            if (loanRequest.getBorrower().getId().equals(investor.getId())) {
-                throw new OurException("You cannot invest in your own loan request",404);
-            }
-
-            if (loanRequest.getStatus() != LoanStatus.APPROVED &&
-                    loanRequest.getStatus() != LoanStatus.PARTIALLY_FUNDED) {
-                throw new OurException("Loan request is not open for investment",404);
-            }
-
-            BigDecimal remaining = loanRequest.getRequestedAmount()
-                    .subtract(loanRequest.getAmountFunded());
-
-            if (investmentRequest.getAmount().compareTo(remaining) > 0) {
-                throw new OurException("Investment amount exceeds remaining capacity of " + remaining,422);
-            }
-
-            // --- EXECUTE ---
-            BigDecimal newAmountFunded = loanRequest.getAmountFunded()
-                    .add(investmentRequest.getAmount());
-
-            LoanStatus newStatus = newAmountFunded.compareTo(loanRequest.getRequestedAmount()) == 0
-                    ? LoanStatus.FULLY_FUNDED
-                    : LoanStatus.PARTIALLY_FUNDED;
-
-            // --- PERSIST ---
-            MatchedRequest match = new MatchedRequest();
-            match.setLoanRequest(loanRequest);
-            match.setInvestor(investor);
-            match.setInvestorAmount(investmentRequest.getAmount());
-            match.setMatchDate(LocalDateTime.now());
-            matchedRequestRepository.save(match);
-
-            loanRequest.setAmountFunded(newAmountFunded);
-            loanRequest.setStatus(newStatus);
-            loanRequestRepository.save(loanRequest);
-
-            // --- RETURN ---
-            response.setStatusCode(200);
-            response.setMessage("Investment successful");
-
-        } catch (OurException e) {
-            response.setStatusCode(404);
-            response.setMessage(e.getMessage());
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error processing investment: " + e.getMessage());
-            throw new RuntimeException(e);
+        // --- VALIDATE ---
+        if (loanRequest.getBorrower().getId().equals(investor.getId())) {
+            throw new OurException("You cannot invest in your own loan request", 400);
         }
-        return response;
-    }
 
-    // INVESTOR PORTFOLIO SUMMARY
-    public Response<PortfolioSummaryDTO> getInvestorPortfolioSummary(String email) {
-        Response<PortfolioSummaryDTO> response = new Response<>();
-        try {
-            // --- FETCH ---
-            if (!userRepository.existsByEmail(email)) {
-                throw new OurException("User not found",404);
-            }
-
-            List<MatchedRequest> investments = matchedRequestRepository.findByInvestor_email(email);
-
-            // --- EXECUTE ---
-            BigDecimal totalInvested = investments.stream()
-                    .map(MatchedRequest::getInvestorAmount)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            BigDecimal avgApy = investments.isEmpty() ? BigDecimal.ZERO :
-                    investments.stream()
-                            .map(m -> m.getLoanRequest().getInterestRate())
-                            .reduce(BigDecimal.ZERO, BigDecimal::add)
-                            .divide(BigDecimal.valueOf(investments.size()), 2, RoundingMode.HALF_UP);
-
-            PortfolioSummaryDTO summary = PortfolioSummaryDTO.builder()
-                    .totalInvested(totalInvested)
-                    .currentValue(totalInvested)
-                    .totalReturns(BigDecimal.ZERO)
-                    .avgApy(avgApy)
-                    .build();
-
-            // --- RETURN ---
-            response.setStatusCode(200);
-            response.setMessage("Portfolio summary retrieved successfully");
-            response.setData(summary);
-
-        } catch (OurException e) {
-            response.setStatusCode(404);
-            response.setMessage(e.getMessage());
-        } catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error retrieving portfolio summary: " + e.getMessage());
+        if (loanRequest.getStatus() != LoanStatus.APPROVED &&
+                loanRequest.getStatus() != LoanStatus.PARTIALLY_FUNDED) {
+            throw new OurException("Loan request is not open for investment", 400);
         }
-        return response;
+
+        BigDecimal remaining = loanRequest.getRequestedAmount()
+                .subtract(loanRequest.getAmountFunded());
+
+        if (investmentRequest.getAmount().compareTo(remaining) > 0) {
+            throw new OurException("Investment amount exceeds remaining capacity of " + remaining, 422);
+        }
+
+        // --- EXECUTE ---
+        BigDecimal newAmountFunded = loanRequest.getAmountFunded()
+                .add(investmentRequest.getAmount());
+
+        LoanStatus newStatus = newAmountFunded.compareTo(loanRequest.getRequestedAmount()) == 0
+                ? LoanStatus.FULLY_FUNDED
+                : LoanStatus.PARTIALLY_FUNDED;
+
+        // --- PERSIST ---
+        MatchedRequest match = new MatchedRequest();
+        match.setLoanRequest(loanRequest);
+        match.setInvestor(investor);
+        match.setInvestorAmount(investmentRequest.getAmount());
+        match.setMatchDate(LocalDateTime.now());
+        matchedRequestRepository.save(match);
+
+        loanRequest.setAmountFunded(newAmountFunded);
+        loanRequest.setStatus(newStatus);
+        loanRequestRepository.save(loanRequest);
     }
 
 
-    // GET MY INVESTMENTS
+    public PortfolioSummaryDTO getInvestorPortfolioSummary(String email) {
+        // --- FETCH ---
+        if (!userRepository.existsByEmail(email)) {
+            throw new OurException("User not found", 404);
+        }
+
+        List<MatchedRequest> investments = matchedRequestRepository.findByInvestor_email(email);
+
+        // --- EXECUTE ---
+        BigDecimal totalInvested = investments.stream()
+                .map(MatchedRequest::getInvestorAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal avgApy = investments.isEmpty() ? BigDecimal.ZERO :
+                investments.stream()
+                        .map(m -> m.getLoanRequest().getInterestRate())
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                        .divide(BigDecimal.valueOf(investments.size()), 2, RoundingMode.HALF_UP);
+
+        // --- RETURN ---
+        return PortfolioSummaryDTO.builder()
+                .totalInvested(totalInvested)
+                .currentValue(totalInvested)
+                .totalReturns(BigDecimal.ZERO)
+                .avgApy(avgApy)
+                .build();
+    }
+
+
     public List<InvestmentDTO> getMyInvestments(String email) {
         return MatchedRequestUtils.mapMatchedRequestListToOutput(
                 matchedRequestRepository.findByInvestor_email(email)
@@ -158,34 +124,14 @@ public class MatchedRequestService implements IMatchedRequestService {
         );
     }
 
-    //GET AN INVESTORS INVESTMENT
-    public Response<List<InvestmentDTO>> getInvestmentsByInvestorId(Long investorId) {
-        Response<List<InvestmentDTO>> response = new Response<>();
-        try {
-            // --- FETCH ---
-            if (!userRepository.existsById(investorId)) {
-                throw new OurException("User not found",404);
-            }
 
-            List<MatchedRequest> investments = matchedRequestRepository.findByInvestor_id(investorId);
-
-            // --- EXECUTE ---
-            List<InvestmentDTO> investmentList = MatchedRequestUtils.mapMatchedRequestListToOutput(investments);
-
-            // --- RETURN ---
-            response.setStatusCode(200);
-            response.setMessage("All investments retrieved successfully");
-            response.setData(investmentList);
-
-        } catch (OurException e) {
-            response.setStatusCode(404);
-            response.setMessage(e.getMessage());
+    public List<InvestmentDTO> getInvestmentsByInvestorId(Long investorId) {
+        if (!userRepository.existsById(investorId)) {
+            throw new OurException("User not found", 404);
         }
-        catch (Exception e) {
-            response.setStatusCode(500);
-            response.setMessage("Error retrieving investments: " + e.getMessage());
-        }
-        return response;
+
+        return MatchedRequestUtils.mapMatchedRequestListToOutput(
+                matchedRequestRepository.findByInvestor_id(investorId)
+        );
     }
-
 }

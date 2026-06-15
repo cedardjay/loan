@@ -2,7 +2,6 @@ package com.finance.loan.controller;
 
 import com.finance.loan.dto.input.InvestRequest;
 import com.finance.loan.dto.input.LoanRequestIN;
-import com.finance.loan.dto.Response;
 import com.finance.loan.dto.output.LoanRequestDTO;
 import com.finance.loan.dto.output.RepaymentScheduleDTO;
 import com.finance.loan.dto.output.TransactionDTO;
@@ -16,7 +15,6 @@ import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,125 +52,107 @@ public class LoanRequestController {
 
     // GET MY REQUEST BY ID
     @GetMapping("/my-requests/{id}")
-    public ResponseEntity<Response<LoanRequestDTO>> getMyLoanRequestById(@PathVariable Long id) {
+    public ResponseEntity<LoanRequestDTO> getMyLoanRequestById(@PathVariable Long id) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Response<LoanRequestDTO> response = loanRequestService.getMyLoanRequestById(id, email);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+        return ResponseEntity.ok(loanRequestService.getMyLoanRequestById(id, email));
     }
 
     // DELETE my loan request
     @DeleteMapping("/my-requests/{id}/delete")
-    public ResponseEntity<Response<Void>> deleteLoanRequest(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteLoanRequest(@PathVariable Long id) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Response<Void> response = loanRequestService.deleteLoanRequest(id, email);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+        loanRequestService.deleteLoanRequest(id, email);
+        return ResponseEntity.noContent().build();
     }
 
     //invest in a loan
     @PostMapping("/{loanRequestId}/invest")
-    public ResponseEntity<Response<Void>> investInLoan(
+    public ResponseEntity<Void> investInLoan(
             @PathVariable @NotNull @Positive Long loanRequestId,
             @Valid @RequestBody InvestRequest investmentRequest) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Response<Void> response = matchedRequestService.investInLoan(loanRequestId, investmentRequest, email);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+        matchedRequestService.investInLoan(loanRequestId, investmentRequest, email);
+        return ResponseEntity.status(201).build();
     }
 
     // GET ALL LOAN REQUESTS (ADMIN and SUPERADMIN)
     @GetMapping("/all")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
-    public ResponseEntity<Response<List<LoanRequestDTO>>> getAllLoanRequests() {
-        Response<List<LoanRequestDTO>> response = loanRequestService.getAllLoanRequests();
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+    public ResponseEntity<List<LoanRequestDTO>> getAllLoanRequests() {
+        return ResponseEntity.ok(loanRequestService.getAllLoanRequests());
     }
 
     // GET BY REQUEST ID (ADMIN and SUPERADMIN)
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
-    public ResponseEntity<Response<LoanRequestDTO>> getLoanRequestById(@PathVariable Long id) {
-        Response<LoanRequestDTO> response = loanRequestService.getLoanRequestById(id);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+    public ResponseEntity<LoanRequestDTO> getLoanRequestById(@PathVariable Long id) {
+        return ResponseEntity.ok(loanRequestService.getLoanRequestById(id));
     }
 
     // GET LOAN REQUESTS BY BORROWER ID (ADMIN and SUPERADMIN)
     @GetMapping("/borrower/{borrowerId}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
-    public ResponseEntity<Response<List<LoanRequestDTO>>> getLoanRequestsByBorrowerId(@PathVariable Long borrowerId) {
-        Response<List<LoanRequestDTO>> response = loanRequestService.getLoanRequestsByBorrowerId(borrowerId);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+    public ResponseEntity<List<LoanRequestDTO>> getLoanRequestsByBorrowerId(@PathVariable Long borrowerId) {
+        return ResponseEntity.ok(loanRequestService.getLoanRequestsByBorrowerId(borrowerId));
     }
 
     // APPROVE (ADMIN and SUPERADMIN)
     @PutMapping("/{requestId}/approve/")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
-    public ResponseEntity<Response<LoanRequestDTO>> approveLoanRequest(@PathVariable Long requestId) {
-        Response<LoanRequestDTO> response = loanRequestService.approveLoanRequest(requestId);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+    public ResponseEntity<LoanRequestDTO> approveLoanRequest(@PathVariable Long requestId) {
+        return ResponseEntity.ok(loanRequestService.approveLoanRequest(requestId));
     }
 
     // REJECT (ADMIN and SUPERADMIN)
     @PutMapping("/{requestId}/reject")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
-    public ResponseEntity<Response<LoanRequestDTO>> rejectLoanRequest(@PathVariable Long requestId) {
-        Response<LoanRequestDTO> response = loanRequestService.rejectLoanRequest(requestId);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+    public ResponseEntity<LoanRequestDTO> rejectLoanRequest(@PathVariable Long requestId) {
+        return ResponseEntity.ok(loanRequestService.rejectLoanRequest(requestId));
     }
 
     // GET MARKETPLACE LOANS
     @GetMapping("/marketplace")
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN', 'SUPERADMIN')")
-    public ResponseEntity<Response<List<LoanRequestDTO>>> getMarketplaceLoans() {
-        Response<List<LoanRequestDTO>> response = loanRequestService.getMarketplaceLoans();
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+    public ResponseEntity<List<LoanRequestDTO>> getMarketplaceLoans() {
+        return ResponseEntity.ok(loanRequestService.getMarketplaceLoans());
     }
 
     // DISBURSE (SUPERADMIN)
     @PutMapping("/{requestId}/disburse")
     @PreAuthorize("hasAuthority('SUPERADMIN')")
-    public ResponseEntity<Response<LoanRequestDTO>> disburseLoan(@PathVariable Long requestId) {
+    public ResponseEntity<LoanRequestDTO> disburseLoan(@PathVariable Long requestId) {
         String adminEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        Response<LoanRequestDTO> response = loanRequestService.disburseLoan(requestId, adminEmail);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+        return ResponseEntity.ok(loanRequestService.disburseLoan(requestId, adminEmail));
     }
-
 
     @GetMapping("/{loanRequestId}/transactions")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
-    public ResponseEntity<Response<List<TransactionDTO>>> getTransactionsByLoanRequest(
+    public ResponseEntity<List<TransactionDTO>> getTransactionsByLoanRequest(
             @PathVariable Long loanRequestId) {
-        Response<List<TransactionDTO>> response = transactionService
-                .getTransactionsByLoanRequest(loanRequestId);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+        return ResponseEntity.ok(transactionService.getTransactionsByLoanRequest(loanRequestId));
     }
 
     @GetMapping("/{loanRequestId}/my-transactions")
-    public ResponseEntity<Response<List<TransactionDTO>>> getMyLoanTransactions(
+    public ResponseEntity<List<TransactionDTO>> getMyLoanTransactions(
             @PathVariable Long loanRequestId) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Response<List<TransactionDTO>> response = transactionService
-                .getMyLoanTransactions(loanRequestId, email);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+        return ResponseEntity.ok(transactionService.getMyLoanTransactions(loanRequestId, email));
     }
 
-
-    //GET THE REPAYMENT SCHEDULE FOR A PARTICULAR LOAN REQUEST
     @GetMapping("/{loanRequestId}/repayment-schedule")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
-    public ResponseEntity<Response<List<RepaymentScheduleDTO>>> getRepaymentScheduleByLoanRequest(@PathVariable Long loanRequestId) {
-        Response<List<RepaymentScheduleDTO>> response = repaymentScheduleService.getRepaymentScheduleByLoanRequest(loanRequestId);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+    public ResponseEntity<List<RepaymentScheduleDTO>> getRepaymentScheduleByLoanRequest(
+            @PathVariable Long loanRequestId) {
+        return ResponseEntity.ok(repaymentScheduleService.getRepaymentScheduleByLoanRequest(loanRequestId));
     }
 
-
-    //USER TO GET REPAYMENT SCHEDULE FOR THEIR LOAN REQUEST
     @GetMapping("/{loanRequestId}/my-repayment-schedule/")
-    public ResponseEntity<Response<List<RepaymentScheduleDTO>>> getMyRepaymentSchedule(
+    public ResponseEntity<List<RepaymentScheduleDTO>> getMyRepaymentSchedule(
             @PathVariable Long loanRequestId) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Response<List<RepaymentScheduleDTO>> response = repaymentScheduleService
-                .getMyRepaymentSchedule(loanRequestId, email);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+        return ResponseEntity.ok(repaymentScheduleService.getMyRepaymentSchedule(loanRequestId, email));
     }
+
 }
 
 

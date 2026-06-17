@@ -100,14 +100,16 @@ public class LoanRequestController {
     @PutMapping("/{requestId}/approve/")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
     public ResponseEntity<LoanRequestDTO> approveLoanRequest(@PathVariable Long requestId) {
-        return ResponseEntity.ok(loanRequestService.approveLoanRequest(requestId));
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(loanRequestService.approveLoanRequest(requestId, email));
     }
 
     // REJECT (ADMIN and SUPERADMIN)
     @PutMapping("/{requestId}/reject")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
     public ResponseEntity<LoanRequestDTO> rejectLoanRequest(@PathVariable Long requestId) {
-        return ResponseEntity.ok(loanRequestService.rejectLoanRequest(requestId));
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(loanRequestService.rejectLoanRequest(requestId, email));
     }
 
     // GET MARKETPLACE LOANS

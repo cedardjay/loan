@@ -32,14 +32,16 @@ public class UserController {
     @DeleteMapping("/{userId}/delete")
     @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable long userId) {
-        userService.deleteUser(userId);
+        String adminEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        userService.deleteUser(userId, adminEmail);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{userId}/grant-role")
     @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseEntity<Void> grantRole(@PathVariable long userId, @RequestBody String role) {
-        userService.grantRole(userId, role);
+        String adminEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        userService.grantRole(userId, role, adminEmail);
         return ResponseEntity.noContent().build();
     }
 

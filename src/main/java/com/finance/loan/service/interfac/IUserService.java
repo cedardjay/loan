@@ -13,11 +13,11 @@ public interface IUserService {
 
     LoginResponseDTO login(LoginRequest loginRequest);
 
-    void grantRole(long userId, String role);
+    void grantRole(long userId, String role, String adminEmail);
 
     List<UserDTO> getAllUsers();
 
-    void deleteUser(long userId);
+    void deleteUser(long userId, String adminEmail);
 
     UserDTO getUserById(Long userId);
 

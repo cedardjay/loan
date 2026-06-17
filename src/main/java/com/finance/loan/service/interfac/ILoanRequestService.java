@@ -20,13 +20,12 @@ public interface ILoanRequestService {
 
     List<LoanRequestDTO> getLoanRequestsByBorrowerId(Long borrowerId);
 
-    LoanRequestDTO approveLoanRequest(Long requestId);
+    LoanRequestDTO approveLoanRequest(Long requestId, String adminEmail);
 
-    LoanRequestDTO rejectLoanRequest(Long requestId);
+    LoanRequestDTO rejectLoanRequest(Long requestId, String adminEmail);
 
     List<LoanRequestDTO> getMarketplaceLoans();
 
     LoanRequestDTO disburseLoan(Long requestId, String adminEmail);
 
-    void deleteLoanRequest(Long id, String email);
 }

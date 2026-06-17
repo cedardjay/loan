@@ -4,6 +4,10 @@ import com.finance.loan.dto.input.LoanRequestIN;
 import com.finance.loan.dto.output.LoanRequestDTO;
 import com.finance.loan.dto.output.PaymentResult;
 import com.finance.loan.entity.*;
+import com.finance.loan.event.LoanDisbursedEvent;
+import com.finance.loan.event.LoanRequestApprovedEvent;
+import com.finance.loan.event.LoanRequestCreatedEvent;
+import com.finance.loan.event.LoanRequestRejectedEvent;
 import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.LoanRequestRepository;
 import com.finance.loan.repo.UserRepository;
@@ -14,6 +18,7 @@ import com.finance.loan.service.interfac.ITransactionService;
 import com.finance.loan.utils.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -32,14 +37,17 @@ public class LoanRequestService implements ILoanRequestService {
     @Autowired
     private UserRepository userRepository;
 
-@Autowired
-private ITransactionService transactionService;
+     @Autowired
+     private ITransactionService transactionService;
 
-@Autowired
-private IRepaymentScheduleService repaymentScheduleService;
+     @Autowired
+     private IRepaymentScheduleService repaymentScheduleService;
 
-@Autowired
-private IPaymentGatewayService paymentGatewayService;
+     @Autowired
+     private IPaymentGatewayService paymentGatewayService;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     // CREATE A LOAN REQUEST
     public LoanRequestDTO createLoanRequest(LoanRequestIN requestDTO, String email) {
@@ -65,8 +73,11 @@ private IPaymentGatewayService paymentGatewayService;
             loanRequest.setStatus(LoanStatus.PENDING_APPROVAL);
             loanRequest.setRequestDate(LocalDateTime.now());
             loanRequest.setInterestRate(interestRate);
-
             LoanRequest savedRequest = loanRequestRepository.save(loanRequest);
+
+        // --- PUBLISH EVENT---
+        eventPublisher.publishEvent(new LoanRequestCreatedEvent(savedRequest, email));
+
 
         return LoanRequestUtils.mapLoanRequestEntityToOutput(savedRequest);
     }
@@ -98,27 +109,6 @@ private IPaymentGatewayService paymentGatewayService;
     }
 
 
-    // DELETE
-    public void deleteLoanRequest(Long requestId, String email) {
-
-        // --- FETCH ---
-        LoanRequest loanRequest = loanRequestRepository.findById(requestId)
-                .orElseThrow(() -> new OurException("Loan request not found", 404));
-
-        // --- VALIDATE ---
-        if (!loanRequest.getBorrower().getEmail().equals(email)) {
-            throw new AccessDeniedException("You are not authorized to delete this loan request");
-        }
-
-        if (loanRequest.getStatus() == LoanStatus.FULLY_FUNDED ||
-                loanRequest.getAmountFunded().compareTo(BigDecimal.ZERO) > 0) {
-            throw new OurException("Cannot delete a loan request that has been funded", 400);
-        }
-
-        // --- PERSIST ---
-        loanRequestRepository.delete(loanRequest);
-
-    }
 
     // GET ALL LOAN REQUESTS (ADMIN and SUPERADMIN)
     public List<LoanRequestDTO> getAllLoanRequests() {
@@ -151,19 +141,27 @@ private IPaymentGatewayService paymentGatewayService;
 
 
     // APPROVE LOAN REQUEST (ADMIN / SUPERADMIN)
-    public LoanRequestDTO approveLoanRequest(Long requestId) {
+    public LoanRequestDTO approveLoanRequest(Long requestId, String adminEmail) {
         // --- FETCH ---
         LoanRequest loanRequest = loanRequestRepository.findById(requestId)
                 .orElseThrow(() -> new OurException("Loan request not found with id: " + requestId, 404));
+
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new OurException("Admin not found with email: " + adminEmail, 404));
 
         // --- VALIDATE ---
         if (loanRequest.getStatus() != LoanStatus.PENDING_APPROVAL) {
             throw new OurException("Only pending loan requests can be approved", 400);
         }
 
+
         // --- PERSIST ---
         loanRequest.setStatus(LoanStatus.APPROVED);
+        loanRequest.setApproval(admin);
         LoanRequest updatedRequest = loanRequestRepository.save(loanRequest);
+
+        // --- PUBLISH EVENT---
+        eventPublisher.publishEvent(new LoanRequestApprovedEvent(updatedRequest, adminEmail));
 
         // --- RETURN ---
         return LoanRequestUtils.mapLoanRequestEntityToOutput(updatedRequest);
@@ -171,10 +169,13 @@ private IPaymentGatewayService paymentGatewayService;
 
 
     // REJECT LOAN REQUEST (ADMIN / SUPERADMIN)
-    public LoanRequestDTO rejectLoanRequest(Long requestId) {
+    public LoanRequestDTO rejectLoanRequest(Long requestId, String adminEmail) {
         // --- FETCH ---
         LoanRequest loanRequest = loanRequestRepository.findById(requestId)
                 .orElseThrow(() -> new OurException("Loan request not found with id: " + requestId, 404));
+
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new OurException("Admin not found with email: " + adminEmail, 404));
 
         // --- VALIDATE ---
         if (loanRequest.getStatus() != LoanStatus.PENDING_APPROVAL) {
@@ -183,7 +184,12 @@ private IPaymentGatewayService paymentGatewayService;
 
         // --- PERSIST ---
         loanRequest.setStatus(LoanStatus.REJECTED);
+        loanRequest.setApproval(admin);
         LoanRequest updatedRequest = loanRequestRepository.save(loanRequest);
+
+        // --- PUBLISH ---
+        eventPublisher.publishEvent(new LoanRequestRejectedEvent(updatedRequest, adminEmail));
+
 
         // --- RETURN ---
         return LoanRequestUtils.mapLoanRequestEntityToOutput(updatedRequest);
@@ -216,9 +222,6 @@ private IPaymentGatewayService paymentGatewayService;
             throw new OurException("Only fully funded loan requests can be disbursed", 400);
         }
 
-        if (loanRequest.getBorrower() == null) {
-            throw new OurException("No borrower linked to this loan request", 400);
-        }
 
         // --- EXECUTE ---
         String paymentReference = "DISB-" + UUID.randomUUID().toString().toUpperCase();
@@ -241,6 +244,10 @@ private IPaymentGatewayService paymentGatewayService;
 
         loanRequest.setStatus(LoanStatus.ACTIVE);
         LoanRequest updatedLoan = loanRequestRepository.save(loanRequest);
+
+        // --- PUBLISH ---
+        eventPublisher.publishEvent(new LoanDisbursedEvent(updatedLoan, adminEmail));
+
 
         // --- RETURN ---
         return LoanRequestUtils.mapLoanRequestEntityToOutput(updatedLoan);

@@ -6,12 +6,15 @@ import com.finance.loan.dto.output.LoginResponseDTO;
 import com.finance.loan.dto.output.UserDTO;
 import com.finance.loan.entity.Role;
 import com.finance.loan.entity.User;
+import com.finance.loan.event.LoanRequestRejectedEvent;
+import com.finance.loan.event.UserRoleGrantedEvent;
 import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.UserRepository;
 import com.finance.loan.service.interfac.IUserService;
 import com.finance.loan.utils.JWTUtils;
 import com.finance.loan.utils.UserUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,6 +36,9 @@ public class UserService implements IUserService {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
 
     @Override
@@ -78,7 +84,7 @@ public class UserService implements IUserService {
 
 
     @Override
-    public void grantRole(long userId, String role) {
+    public void grantRole(long userId, String role, String adminEmail) {
         // --- FETCH ---
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new OurException("User not found", 404));
@@ -94,17 +100,21 @@ public class UserService implements IUserService {
         // --- PERSIST ---
         user.setRole(newRole);
         userRepository.save(user);
+
+        // --- PUBLISH ---
+        eventPublisher.publishEvent(new UserRoleGrantedEvent(user, adminEmail));
     }
 
 
     @Override
     public List<UserDTO> getAllUsers() {
+        //FETCH, RETURN
         return UserUtils.mapUserListToOutput(userRepository.findAll());
     }
 
 
     @Override
-    public void deleteUser(long userId) {
+    public void deleteUser(long userId, String adminEmail) {
         // --- FETCH ---
         if (!userRepository.existsById(userId)) {
             throw new OurException("User not found", 404);
@@ -112,6 +122,8 @@ public class UserService implements IUserService {
 
         // --- PERSIST ---
         userRepository.deleteById(userId);
+
+
     }
 
 

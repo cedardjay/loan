@@ -3,13 +3,14 @@ package com.finance.loan.service.interfac;
 import com.finance.loan.dto.input.LoginRequest;
 import com.finance.loan.dto.input.RegisterRequest;
 import com.finance.loan.dto.output.LoginResponseDTO;
+import com.finance.loan.dto.output.RegisterResponseDTO;
 import com.finance.loan.dto.output.UserDTO;
 
 import java.util.List;
 
 public interface IUserService {
 
-    UserDTO register(RegisterRequest registerRequest);
+    RegisterResponseDTO register(RegisterRequest registerRequest);
 
     LoginResponseDTO login(LoginRequest loginRequest);
 

@@ -1,6 +1,5 @@
 package com.finance.loan.service;
 
-import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,6 +16,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByEmail(username)
-                .orElseThrow(() -> new OurException("Username/Email not found",404));
+                .orElseThrow(() -> new UsernameNotFoundException("Username/Email not found"));
     }
 }

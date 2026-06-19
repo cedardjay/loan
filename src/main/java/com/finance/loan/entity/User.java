@@ -36,6 +36,8 @@ public class User implements UserDetails {
     @Column(name = "role", length = 20)
     private Role role;
 
+    //UserDetails Methods implementation
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));

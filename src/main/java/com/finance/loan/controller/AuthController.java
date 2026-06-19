@@ -3,6 +3,7 @@ package com.finance.loan.controller;
 import com.finance.loan.dto.input.LoginRequest;
 import com.finance.loan.dto.input.RegisterRequest;
 import com.finance.loan.dto.output.LoginResponseDTO;
+import com.finance.loan.dto.output.RegisterResponseDTO;
 import com.finance.loan.dto.output.UserDTO;
 import com.finance.loan.service.interfac.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,7 @@ public class AuthController {
     private IUserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<UserDTO> register(@RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<RegisterResponseDTO> register(@RequestBody RegisterRequest registerRequest) {
         return ResponseEntity.status(201).body(userService.register(registerRequest));
     }
 

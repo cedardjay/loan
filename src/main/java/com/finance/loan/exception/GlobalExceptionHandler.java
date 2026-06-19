@@ -5,6 +5,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.security.core.AuthenticationException;
+
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -53,12 +55,23 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException e) {
+        return ResponseEntity.status(401).body(
+                ErrorResponse.builder()
+                        .status(401)
+                        .message("Invalid username or password")
+                        .timestamp(LocalDateTime.now())
+                        .build()
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception e) {
         return ResponseEntity.status(500).body(
                 ErrorResponse.builder()
                         .status(500)
-                        .message("An unexpected error occurred: " + e.getMessage())
+                        .message("An unexpected error occurred: " + e.getMessage()) //Log it For debugging
                         .timestamp(LocalDateTime.now())
                         .build()
         );

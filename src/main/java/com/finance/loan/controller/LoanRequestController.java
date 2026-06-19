@@ -57,13 +57,6 @@ public class LoanRequestController {
         return ResponseEntity.ok(loanRequestService.getMyLoanRequestById(id, email));
     }
 
-    // DELETE my loan request
-    @DeleteMapping("/my-requests/{id}/delete")
-    public ResponseEntity<Void> deleteLoanRequest(@PathVariable Long id) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        loanRequestService.deleteLoanRequest(id, email);
-        return ResponseEntity.noContent().build();
-    }
 
     //invest in a loan
     @PostMapping("/{loanRequestId}/invest")

@@ -3,10 +3,11 @@ package com.finance.loan.service.implementation;
 import com.finance.loan.dto.input.LoginRequest;
 import com.finance.loan.dto.input.RegisterRequest;
 import com.finance.loan.dto.output.LoginResponseDTO;
+import com.finance.loan.dto.output.RegisterResponseDTO;
 import com.finance.loan.dto.output.UserDTO;
 import com.finance.loan.entity.Role;
 import com.finance.loan.entity.User;
-import com.finance.loan.event.LoanRequestRejectedEvent;
+import com.finance.loan.event.UserRegisteredEvent;
 import com.finance.loan.event.UserRoleGrantedEvent;
 import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.UserRepository;
@@ -42,7 +43,7 @@ public class UserService implements IUserService {
 
 
     @Override
-    public UserDTO register(RegisterRequest registerRequest) {
+    public RegisterResponseDTO register(RegisterRequest registerRequest) {
         // --- VALIDATE ---
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
             throw new OurException(registerRequest.getEmail() + " already exists", 400);
@@ -56,8 +57,21 @@ public class UserService implements IUserService {
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setRole(userRepository.count() == 0 ? Role.SUPERADMIN : Role.USER);
 
-        // --- RETURN ---
-        return UserUtils.mapUserEntityToOutput(userRepository.save(user));
+        // --- PERSIST ---
+        User savedUser = userRepository.save(user);
+
+        // --- PUBLISH ---
+        eventPublisher.publishEvent(new UserRegisteredEvent(savedUser,savedUser.getEmail()));
+
+       // --- RETURN ---
+        return RegisterResponseDTO.builder()
+                .name(savedUser.getName())
+                .email(savedUser.getEmail())
+                .phoneNumber(savedUser.getPhoneNumber())
+                .role(savedUser.getRole().name())
+                .expirationTime("7 days")
+                .token(jwtUtils.generateToken(savedUser))
+                .build();
     }
 
 

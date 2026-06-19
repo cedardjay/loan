@@ -37,7 +37,8 @@ public class ActivityLogListener {
         log("USER_ROLE_GRANTED", "User", event.getUser().getId(),
                 event.getActorEmail(),
                 Map.of(
-                        "targetEmail", event.getUser().getEmail()
+                        "targetEmail", event.getUser().getEmail(),
+                        "newRole", event.getUser().getRole().name()
                 ));
     }
 

@@ -7,6 +7,8 @@ import com.finance.loan.entity.LoanRequest;
 import com.finance.loan.entity.LoanStatus;
 import com.finance.loan.entity.MatchedRequest;
 import com.finance.loan.entity.User;
+import com.finance.loan.event.InvestmentMadeEvent;
+import com.finance.loan.event.LoanPaymentEvent;
 import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.LoanRequestRepository;
 import com.finance.loan.repo.MatchedRequestRepository;
@@ -15,6 +17,7 @@ import com.finance.loan.service.interfac.IMatchedRequestService;
 import com.finance.loan.utils.MatchedRequestUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -34,10 +37,15 @@ public class MatchedRequestService implements IMatchedRequestService {
     @Autowired
     private LoanRequestRepository loanRequestRepository;
 
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
+
+    //INVEST IN A LOAN
     @Transactional
-    public void investInLoan(Long loanRequestId, InvestRequest investmentRequest, String email) {
+    public void investInLoan(Long loanRequestId, InvestRequest investmentRequest, String investorEmail) {
         // --- FETCH ---
-        User investor = userRepository.findByEmail(email)
+        User investor = userRepository.findByEmail(investorEmail)
                 .orElseThrow(() -> new OurException("User not found", 404));
 
         LoanRequest loanRequest = loanRequestRepository.findById(loanRequestId)
@@ -79,8 +87,10 @@ public class MatchedRequestService implements IMatchedRequestService {
         loanRequest.setAmountFunded(newAmountFunded);
         loanRequest.setStatus(newStatus);
         loanRequestRepository.save(loanRequest);
-    }
 
+        // --- PUBLISH ---
+        eventPublisher.publishEvent(new InvestmentMadeEvent(match, investorEmail));
+    }
 
     public PortfolioSummaryDTO getInvestorPortfolioSummary(String email) {
         // --- FETCH ---

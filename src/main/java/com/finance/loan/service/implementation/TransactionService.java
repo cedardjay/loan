@@ -1,5 +1,6 @@
 package com.finance.loan.service.implementation;
 
+import com.finance.loan.dto.input.GatewayWebhookPayload;
 import com.finance.loan.dto.output.TransactionDTO;
 import com.finance.loan.entity.*;
 import com.finance.loan.exception.OurException;
@@ -7,6 +8,7 @@ import com.finance.loan.repo.LoanRequestRepository;
 import com.finance.loan.repo.TransactionRepository;
 import com.finance.loan.service.interfac.ITransactionService;
 import com.finance.loan.utils.TransactionUtils;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,12 +26,13 @@ public class TransactionService implements ITransactionService {
     private LoanRequestRepository loanRequestRepository;
 
 
-    public void recordDisbursement(User admin, User borrower,
-                                   LoanRequest loanRequest,
-                                   BigDecimal amount,
-                                   String paymentReference) {
+    @Override
+    public void recordPendingDisbursement(User platformAccount, User borrower,
+                                          LoanRequest loanRequest,
+                                          BigDecimal amount,
+                                          String paymentReference) {
         transactionRepository.save(Transaction.builder()
-                .sender(admin)
+                .sender(platformAccount)
                 .receiver(borrower)
                 .loanRequest(loanRequest)
                 .amount(amount)
@@ -37,11 +40,46 @@ public class TransactionService implements ITransactionService {
                 .transactionDate(LocalDateTime.now())
                 .description("Loan disbursement - Ref: " + paymentReference)
                 .transactionType(TransactionType.DISBURSEMENT)
-                .transactionStatus(TransactionStatus.COMPLETED)
+                .transactionStatus(TransactionStatus.PENDING)
+                .paymentReference(paymentReference)
+                .build());
+    }
+
+     @Override
+    public void recordPendingRepayment(User borrower, User platformAccount, LoanRequest loanRequest, RepaymentSchedule schedule,
+                                BigDecimal amount, String paymentReference) {
+        transactionRepository.save(Transaction.builder()
+                .sender(borrower)
+                .receiver(platformAccount)
+                .loanRequest(loanRequest)
+                .repaymentSchedule(schedule)
+                .amount(amount)
+                .paymentMethod("MOCK_GATEWAY")
+                .transactionDate(LocalDateTime.now())
+                .paymentReference(paymentReference)
+                .description("Loan repayment - Ref:" + paymentReference)
+                .transactionType(TransactionType.REPAYMENT)
+                .transactionStatus(TransactionStatus.PENDING)
                 .build());
     }
 
 
+    @Override
+    public Transaction settleTransaction(String paymentReference, boolean success) {
+        Transaction tx = transactionRepository.findByPaymentReference(paymentReference)
+                .orElseThrow(() -> new OurException("Unknown payment reference: " + paymentReference, 404));
+
+        // duplicate webhook guard — gateway often retries
+        if (tx.getTransactionStatus() != TransactionStatus.PENDING) {
+            return tx;
+        }
+
+        tx.setTransactionStatus(success ? TransactionStatus.COMPLETED : TransactionStatus.FAILED);
+        tx.setSettledAt(LocalDateTime.now());
+        return transactionRepository.save(tx);
+    }
+
+    @Override
     public List<TransactionDTO> getTransactionsByLoanRequest(Long loanRequestId) {
         // --- FETCH ---
         loanRequestRepository.findById(loanRequestId)
@@ -52,12 +90,12 @@ public class TransactionService implements ITransactionService {
                 transactionRepository.findByLoanRequest_requestId(loanRequestId));
     }
 
-
+    @Override
     public List<TransactionDTO> getAllTransactions() {
         return TransactionUtils.mapTransactionListToOutput(transactionRepository.findAll());
     }
 
-
+    @Override
     public List<TransactionDTO> getMyLoanTransactions(Long loanRequestId, String email) {
         // --- FETCH ---
         LoanRequest loanRequest = loanRequestRepository.findById(loanRequestId)

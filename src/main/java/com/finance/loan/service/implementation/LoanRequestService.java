@@ -2,12 +2,8 @@ package com.finance.loan.service.implementation;
 
 import com.finance.loan.dto.input.LoanRequestIN;
 import com.finance.loan.dto.output.LoanRequestDTO;
-import com.finance.loan.dto.output.PaymentResult;
 import com.finance.loan.entity.*;
-import com.finance.loan.event.LoanDisbursedEvent;
-import com.finance.loan.event.LoanRequestApprovedEvent;
-import com.finance.loan.event.LoanRequestCreatedEvent;
-import com.finance.loan.event.LoanRequestRejectedEvent;
+import com.finance.loan.event.*;
 import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.LoanRequestRepository;
 import com.finance.loan.repo.UserRepository;
@@ -16,7 +12,7 @@ import com.finance.loan.service.interfac.IPaymentGatewayService;
 import com.finance.loan.service.interfac.IRepaymentScheduleService;
 import com.finance.loan.service.interfac.ITransactionService;
 import com.finance.loan.utils.*;
-import jakarta.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
@@ -25,7 +21,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
+
 
 
 @Service
@@ -37,14 +33,6 @@ public class LoanRequestService implements ILoanRequestService {
     @Autowired
     private UserRepository userRepository;
 
-     @Autowired
-     private ITransactionService transactionService;
-
-     @Autowired
-     private IRepaymentScheduleService repaymentScheduleService;
-
-     @Autowired
-     private IPaymentGatewayService paymentGatewayService;
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
@@ -204,53 +192,6 @@ public class LoanRequestService implements ILoanRequestService {
                         LoanStatus.PARTIALLY_FUNDED,
                         LoanStatus.FULLY_FUNDED
                 )));
-    }
-
-
-    // DISBURSE LOAN
-    @Transactional
-    public LoanRequestDTO disburseLoan(Long requestId, String adminEmail) {
-        // --- FETCH ---
-        User admin = userRepository.findByEmail(adminEmail)
-                .orElseThrow(() -> new OurException("Admin user not found", 404));
-
-        LoanRequest loanRequest = loanRequestRepository.findById(requestId)
-                .orElseThrow(() -> new OurException("Loan request not found with id: " + requestId, 404));
-
-        // --- VALIDATE ---
-        if (loanRequest.getStatus() != LoanStatus.FULLY_FUNDED) {
-            throw new OurException("Only fully funded loan requests can be disbursed", 400);
-        }
-
-
-        // --- EXECUTE ---
-        String paymentReference = "DISB-" + UUID.randomUUID().toString().toUpperCase();
-        PaymentResult result = paymentGatewayService.disburse(
-                loanRequest.getRequestedAmount(),
-                loanRequest.getBorrower(),
-                paymentReference
-        );
-
-        if (!result.isSuccessful()) {
-            throw new OurException("Payment gateway failed: " + result.getErrorMessage(), 400);
-        }
-
-        // --- PERSIST ---
-        transactionService.recordDisbursement(
-                admin, loanRequest.getBorrower(), loanRequest,
-                loanRequest.getRequestedAmount(), paymentReference);
-
-        repaymentScheduleService.generateSchedule(loanRequest);
-
-        loanRequest.setStatus(LoanStatus.ACTIVE);
-        LoanRequest updatedLoan = loanRequestRepository.save(loanRequest);
-
-        // --- PUBLISH ---
-        eventPublisher.publishEvent(new LoanDisbursedEvent(updatedLoan, adminEmail));
-
-
-        // --- RETURN ---
-        return LoanRequestUtils.mapLoanRequestEntityToOutput(updatedLoan);
     }
 
 }

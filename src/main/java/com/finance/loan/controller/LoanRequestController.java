@@ -2,13 +2,8 @@ package com.finance.loan.controller;
 
 import com.finance.loan.dto.input.InvestRequest;
 import com.finance.loan.dto.input.LoanRequestIN;
-import com.finance.loan.dto.output.LoanRequestDTO;
-import com.finance.loan.dto.output.RepaymentScheduleDTO;
-import com.finance.loan.dto.output.TransactionDTO;
-import com.finance.loan.service.interfac.ILoanRequestService;
-import com.finance.loan.service.interfac.IMatchedRequestService;
-import com.finance.loan.service.interfac.IRepaymentScheduleService;
-import com.finance.loan.service.interfac.ITransactionService;
+import com.finance.loan.dto.output.*;
+import com.finance.loan.service.interfac.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -26,6 +21,12 @@ public class LoanRequestController {
 
     @Autowired
     private ILoanRequestService loanRequestService;
+
+    @Autowired
+    private ILoanDisbursementService loanDisbursementService;
+
+    @Autowired
+    private ILoanRepaymentService loanRepaymentService;
 
     @Autowired
     private ITransactionService transactionService;
@@ -90,7 +91,7 @@ public class LoanRequestController {
     }
 
     // APPROVE (ADMIN and SUPERADMIN)
-    @PutMapping("/{requestId}/approve/")
+    @PutMapping("/{requestId}/approve")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
     public ResponseEntity<LoanRequestDTO> approveLoanRequest(@PathVariable Long requestId) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -113,11 +114,11 @@ public class LoanRequestController {
     }
 
     // DISBURSE (SUPERADMIN)
-    @PutMapping("/{requestId}/disburse")
-    @PreAuthorize("hasAuthority('SUPERADMIN')")
-    public ResponseEntity<LoanRequestDTO> disburseLoan(@PathVariable Long requestId) {
+    @PostMapping("/{id}/disburse")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
+    public ResponseEntity<LoanDisbursementResult> disburseLoan(@PathVariable Long id) {
         String adminEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        return ResponseEntity.ok(loanRequestService.disburseLoan(requestId, adminEmail));
+        return ResponseEntity.ok(loanDisbursementService.disburseLoan(id, adminEmail));
     }
 
     @GetMapping("/{loanRequestId}/transactions")
@@ -127,7 +128,7 @@ public class LoanRequestController {
         return ResponseEntity.ok(transactionService.getTransactionsByLoanRequest(loanRequestId));
     }
 
-    @GetMapping("/{loanRequestId}/my-transactions")
+    @GetMapping("/my-requests/{loanRequestId}/transactions")
     public ResponseEntity<List<TransactionDTO>> getMyLoanTransactions(
             @PathVariable Long loanRequestId) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -141,11 +142,17 @@ public class LoanRequestController {
         return ResponseEntity.ok(repaymentScheduleService.getRepaymentScheduleByLoanRequest(loanRequestId));
     }
 
-    @GetMapping("/{loanRequestId}/my-repayment-schedule/")
+    @GetMapping("/my-requests/{loanRequestId}/repayment-schedule/")
     public ResponseEntity<List<RepaymentScheduleDTO>> getMyRepaymentSchedule(
             @PathVariable Long loanRequestId) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(repaymentScheduleService.getMyRepaymentSchedule(loanRequestId, email));
+    }
+
+    @PostMapping("/my-requests/{id}/pay")
+    public ResponseEntity<LoanPaymentResult> payLoanInstallment(@PathVariable Long id) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(loanRepaymentService.loanPayment(id, email));
     }
 
 }

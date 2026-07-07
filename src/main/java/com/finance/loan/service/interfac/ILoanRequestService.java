@@ -1,6 +1,7 @@
 package com.finance.loan.service.interfac;
 
 import com.finance.loan.dto.input.LoanRequestIN;
+import com.finance.loan.dto.output.LoanPaymentResult;
 import com.finance.loan.dto.output.LoanRequestDTO;
 
 import java.util.List;
@@ -26,6 +27,6 @@ public interface ILoanRequestService {
 
     List<LoanRequestDTO> getMarketplaceLoans();
 
-    LoanRequestDTO disburseLoan(Long requestId, String adminEmail);
 
-}
+
+    }

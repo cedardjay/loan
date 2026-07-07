@@ -43,11 +43,17 @@ public class Transaction {
     @Column(nullable = false)
     private String paymentMethod;
 
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime transactionDate;
 
-    @Column(nullable = true)
+    @Column
     private String description;
+
+    @Column(nullable = false)
+    private String paymentReference;
+
+    @Column
+    private LocalDateTime settledAt;   // null until webhook fires
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
@@ -56,6 +62,7 @@ public class Transaction {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private TransactionStatus transactionStatus;
+
 
 
 }

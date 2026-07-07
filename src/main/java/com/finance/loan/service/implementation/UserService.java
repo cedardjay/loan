@@ -55,7 +55,7 @@ public class UserService implements IUserService {
         user.setEmail(registerRequest.getEmail());
         user.setPhoneNumber(registerRequest.getPhoneNumber());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        user.setRole(userRepository.count() == 0 ? Role.SUPERADMIN : Role.USER);
+        user.setRole(userRepository.count() <= 1 ? Role.SUPERADMIN : Role.USER);
 
         // --- PERSIST ---
         User savedUser = userRepository.save(user);

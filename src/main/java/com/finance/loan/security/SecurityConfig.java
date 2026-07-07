@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(request -> request
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/webhooks/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -45,14 +46,8 @@ public class SecurityConfig {
 
         return httpSecurity.build();
     }
-/*//need to check this to create a role hierarchy
-    @Bean
-    public RoleHierarchy roleHierarchy() {
-        RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();
-        hierarchy.setHierarchy("SUPERADMIN > ADMIN > USER");
-        return hierarchy;
-    }
-*/
+
+
 
     @Bean
     public AuthenticationProvider authenticationProvider() {

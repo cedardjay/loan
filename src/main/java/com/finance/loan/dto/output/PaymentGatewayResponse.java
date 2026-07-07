@@ -5,8 +5,8 @@ import lombok.Data;
 
 @Data
 @Builder
-public class PaymentResult {
-    private boolean successful;
+public class PaymentGatewayResponse {
+    private boolean accepted;
     private String reference;
     private String errorMessage;
 }

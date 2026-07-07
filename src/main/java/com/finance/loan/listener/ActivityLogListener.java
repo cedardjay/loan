@@ -123,6 +123,22 @@ public class ActivityLogListener {
                 ));
     }
 
+    @Async
+    @EventListener
+    public void onLoanPayment(LoanPaymentEvent event) {
+        String action = event.isFinalPayment() ? "LOAN_FULLY_REPAID" : "LOAN_PAYMENT_MADE";
+
+        log(action, "LoanRequest", event.getLoanRequest().getRequestId(),
+                event.getActorEmail(),
+                Map.of(
+                        "borrowerEmail", event.getLoanRequest().getBorrower().getEmail(),
+                        "scheduleId", event.getSchedule().getScheduleId(),
+                        "amountPaid", event.getSchedule().getAmountPaid(),
+                        "dueDate", event.getSchedule().getDueDate().toString(),
+                        "finalPayment", event.isFinalPayment()
+                ));
+    }
+
 
     private void log(String action, String entityType, Long entityId,
                      String actorEmail, Map<String, Object> details) {

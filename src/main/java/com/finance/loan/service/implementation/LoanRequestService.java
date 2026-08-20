@@ -194,4 +194,29 @@ public class LoanRequestService implements ILoanRequestService {
                 )));
     }
 
+    // GET MY ACTIVE LOANS (BORROWER)
+    public List<LoanRequestDTO> getActiveLoansByBorrowerEmail(String email) {
+        // --- FETCH ---
+        List<LoanRequest> activeLoans = loanRequestRepository
+                .findByBorrowerEmailAndStatus(email, LoanStatus.ACTIVE);
+
+        // --- RETURN ---
+        return LoanRequestUtils.mapLoanRequestListToOutput(activeLoans);
+    }
+
+    // GET MY MARKETPLACE LOANS (BORROWER'S OWN LISTED LOANS)
+    public List<LoanRequestDTO> getMyMarketplaceLoans(String email) {
+        // --- FETCH ---
+        List<LoanRequest> loans = loanRequestRepository.findByBorrowerEmailAndStatusIn(
+                email,
+                List.of(
+                        LoanStatus.APPROVED,
+                        LoanStatus.PARTIALLY_FUNDED,
+                        LoanStatus.FULLY_FUNDED
+                ));
+
+        // --- RETURN ---
+        return LoanRequestUtils.mapLoanRequestListToOutput(loans);
+    }
+
 }

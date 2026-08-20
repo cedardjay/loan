@@ -28,5 +28,7 @@ public interface ILoanRequestService {
     List<LoanRequestDTO> getMarketplaceLoans();
 
 
+    List<LoanRequestDTO> getActiveLoansByBorrowerEmail(String email);
 
-    }
+    List<LoanRequestDTO> getMyMarketplaceLoans(String email);
+}

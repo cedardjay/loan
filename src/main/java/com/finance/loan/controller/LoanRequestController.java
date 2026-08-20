@@ -155,6 +155,17 @@ public class LoanRequestController {
         return ResponseEntity.ok(loanRepaymentService.loanPayment(id, email));
     }
 
+    @GetMapping("/my-active")
+    public ResponseEntity<List<LoanRequestDTO>> getMyActiveLoans() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(loanRequestService.getActiveLoansByBorrowerEmail(email));
+    }
+
+    @GetMapping("/my-marketplace")
+    public ResponseEntity<List<LoanRequestDTO>> getMyMarketplaceLoans() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(loanRequestService.getMyMarketplaceLoans(email));
+    }
 }
 
 

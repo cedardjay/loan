@@ -14,4 +14,8 @@ public interface LoanRequestRepository extends JpaRepository<LoanRequest, Long> 
     List<LoanRequest> findByStatusIn(List<LoanStatus> statuses);
 
     List<LoanRequest> findByBorrowerEmail(String email);
+
+    List<LoanRequest> findByBorrowerEmailAndStatus(String email, LoanStatus status);
+
+    List<LoanRequest> findByBorrowerEmailAndStatusIn(String email, List<LoanStatus> approved);
 }

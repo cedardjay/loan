@@ -64,4 +64,8 @@ public class LoanRequest {
 
     @OneToMany(mappedBy = "loanRequest", fetch = FetchType.LAZY)
     private List<Transaction> transactions = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payout_account_id")
+    private PayoutAccount payoutAccount;
 }

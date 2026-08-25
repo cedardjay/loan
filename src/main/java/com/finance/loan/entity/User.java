@@ -36,6 +36,9 @@ public class User implements UserDetails {
     @Column(name = "role", length = 20)
     private Role role;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private PayoutAccount payoutMethod;
+
     //UserDetails Methods implementation
 
     @Override

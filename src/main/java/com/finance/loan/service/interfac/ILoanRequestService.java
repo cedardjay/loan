@@ -1,5 +1,6 @@
 package com.finance.loan.service.interfac;
 
+import com.finance.loan.dto.input.DisbursalRequestIN;
 import com.finance.loan.dto.input.LoanRequestIN;
 import com.finance.loan.dto.output.LoanPaymentResult;
 import com.finance.loan.dto.output.LoanRequestDTO;
@@ -31,4 +32,6 @@ public interface ILoanRequestService {
     List<LoanRequestDTO> getActiveLoansByBorrowerEmail(String email);
 
     List<LoanRequestDTO> getMyMarketplaceLoans(String email);
+
+
 }

@@ -1,11 +1,13 @@
 package com.finance.loan.service.implementation;
 
+import com.finance.loan.dto.input.DisbursalRequestIN;
 import com.finance.loan.dto.input.LoanRequestIN;
 import com.finance.loan.dto.output.LoanRequestDTO;
 import com.finance.loan.entity.*;
 import com.finance.loan.event.*;
 import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.LoanRequestRepository;
+import com.finance.loan.repo.PayoutAccountRepository;
 import com.finance.loan.repo.UserRepository;
 import com.finance.loan.service.interfac.ILoanRequestService;
 import com.finance.loan.service.interfac.IPaymentGatewayService;
@@ -37,6 +39,7 @@ public class LoanRequestService implements ILoanRequestService {
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
+
     // CREATE A LOAN REQUEST
     public LoanRequestDTO createLoanRequest(LoanRequestIN requestDTO, String email) {
 
@@ -66,7 +69,7 @@ public class LoanRequestService implements ILoanRequestService {
         // --- PUBLISH EVENT---
         eventPublisher.publishEvent(new LoanRequestCreatedEvent(savedRequest, email));
 
-
+       //return
         return LoanRequestUtils.mapLoanRequestEntityToOutput(savedRequest);
     }
 
@@ -218,5 +221,7 @@ public class LoanRequestService implements ILoanRequestService {
         // --- RETURN ---
         return LoanRequestUtils.mapLoanRequestListToOutput(loans);
     }
+
+
 
 }

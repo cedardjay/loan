@@ -1,6 +1,5 @@
 package com.finance.loan.service.implementation;
 
-import com.finance.loan.dto.input.GatewayWebhookPayload;
 import com.finance.loan.dto.output.TransactionDTO;
 import com.finance.loan.entity.*;
 import com.finance.loan.exception.OurException;
@@ -8,7 +7,6 @@ import com.finance.loan.repo.LoanRequestRepository;
 import com.finance.loan.repo.TransactionRepository;
 import com.finance.loan.service.interfac.ITransactionService;
 import com.finance.loan.utils.TransactionUtils;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,23 +25,27 @@ public class TransactionService implements ITransactionService {
 
 
     @Override
-    public void recordPendingDisbursement(User platformAccount, User borrower,
-                                          LoanRequest loanRequest,
-                                          BigDecimal amount,
-                                          String paymentReference) {
+    public Transaction recordDisbursement(User platformAccount, User borrower,
+                                                   LoanRequest loanRequest,
+                                                   BigDecimal amount,
+                                                   String paymentReference, TransactionStatus status) {
+        return
         transactionRepository.save(Transaction.builder()
                 .sender(platformAccount)
                 .receiver(borrower)
                 .loanRequest(loanRequest)
                 .amount(amount)
-                .paymentMethod("MOCK_GATEWAY")
+                .paymentMethod(String.valueOf(loanRequest.getPayoutAccount().getType()))
                 .transactionDate(LocalDateTime.now())
                 .description("Loan disbursement - Ref: " + paymentReference)
                 .transactionType(TransactionType.DISBURSEMENT)
-                .transactionStatus(TransactionStatus.PENDING)
+                .transactionStatus(status)
                 .paymentReference(paymentReference)
                 .build());
+
     }
+
+
 
      @Override
     public void recordPendingRepayment(User borrower, User platformAccount, LoanRequest loanRequest, RepaymentSchedule schedule,
@@ -65,7 +67,7 @@ public class TransactionService implements ITransactionService {
 
 
     @Override
-    public Transaction settleTransaction(String paymentReference, boolean success) {
+    public Transaction settleTransaction(String paymentReference, TransactionStatus status) {
         Transaction tx = transactionRepository.findByPaymentReference(paymentReference)
                 .orElseThrow(() -> new OurException("Unknown payment reference: " + paymentReference, 404));
 
@@ -74,10 +76,14 @@ public class TransactionService implements ITransactionService {
             return tx;
         }
 
-        tx.setTransactionStatus(success ? TransactionStatus.COMPLETED : TransactionStatus.FAILED);
-        tx.setSettledAt(LocalDateTime.now());
+        tx.setTransactionStatus(status);
+        if (status == TransactionStatus.COMPLETED) {
+            tx.setSettledAt(LocalDateTime.now());
+        }
+
         return transactionRepository.save(tx);
     }
+
 
     @Override
     public List<TransactionDTO> getTransactionsByLoanRequest(Long loanRequestId) {

@@ -1,5 +1,6 @@
 package com.finance.loan.controller;
 
+import com.finance.loan.dto.input.DisbursalRequestIN;
 import com.finance.loan.dto.input.InvestRequest;
 import com.finance.loan.dto.input.LoanRequestIN;
 import com.finance.loan.dto.output.*;
@@ -113,13 +114,7 @@ public class LoanRequestController {
         return ResponseEntity.ok(loanRequestService.getMarketplaceLoans());
     }
 
-    // DISBURSE (SUPERADMIN)
-    @PostMapping("/{id}/disburse")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
-    public ResponseEntity<LoanDisbursementResult> disburseLoan(@PathVariable Long id) {
-        String adminEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        return ResponseEntity.ok(loanDisbursementService.disburseLoan(id, adminEmail));
-    }
+
 
     @GetMapping("/{loanRequestId}/transactions")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
@@ -166,6 +161,9 @@ public class LoanRequestController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(loanRequestService.getMyMarketplaceLoans(email));
     }
+
+
+
 }
 
 

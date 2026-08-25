@@ -17,7 +17,7 @@ public class LoanRequestIN {
     @NotBlank(message = "Description is required")
     private String description;
 
-    @NotBlank(message = "Description is required")
+    @NotBlank(message = "purpose is required")
     private String purpose;
 
     @NotNull(message = "Term months is required")

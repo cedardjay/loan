@@ -1,21 +1,20 @@
 package com.finance.loan.service.interfac;
 
-import com.finance.loan.dto.input.GatewayWebhookPayload;
 import com.finance.loan.dto.output.TransactionDTO;
-import com.finance.loan.entity.LoanRequest;
-import com.finance.loan.entity.RepaymentSchedule;
-import com.finance.loan.entity.Transaction;
-import com.finance.loan.entity.User;
+import com.finance.loan.entity.*;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 public interface ITransactionService {
 
-    void recordPendingDisbursement(User admin, User borrower,
-                                          LoanRequest loanRequest,
-                                          BigDecimal amount,
-                                          String paymentReference);
+
+    Transaction recordDisbursement(User admin, User borrower,
+                                   LoanRequest loanRequest,
+                                   BigDecimal amount,
+                                   String paymentReference, TransactionStatus status);
+
+    Transaction settleTransaction(String paymentReference, TransactionStatus status);
 
     List<TransactionDTO> getTransactionsByLoanRequest(Long loanRequestId);
 
@@ -26,7 +25,5 @@ public interface ITransactionService {
     List<TransactionDTO> getMyTransactions(String email);
 
     void recordPendingRepayment(User borrower, User platformAccount, LoanRequest loanRequest, RepaymentSchedule schedule, BigDecimal paymentAmount, String paymentReference);
-
-    Transaction settleTransaction(String paymentReference, boolean success);
 
     }

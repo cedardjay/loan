@@ -4,7 +4,7 @@ import com.finance.loan.dto.input.DisbursalRequestIN;
 import com.finance.loan.dto.internal.PaymentPayoutRequest;
 import com.finance.loan.dto.output.LoanDisbursementResult;
 import com.finance.loan.dto.output.LoanRequestDTO;
-import com.finance.loan.dto.output.PaymentGatewayResponse;
+import com.finance.loan.dto.internal.PaymentGatewayResponse;
 import com.finance.loan.entity.*;
 import com.finance.loan.event.LoanDisbursedEvent;
 import com.finance.loan.exception.OurException;
@@ -12,6 +12,7 @@ import com.finance.loan.repo.LoanRequestRepository;
 import com.finance.loan.repo.PayoutAccountRepository;
 import com.finance.loan.repo.UserRepository;
 import com.finance.loan.service.interfac.ILoanDisbursementService;
+import com.finance.loan.service.interfac.IPaymentGatewayService;
 import com.finance.loan.service.interfac.IRepaymentScheduleService;
 import com.finance.loan.utils.LoanRequestUtils;
 import jakarta.transaction.Transactional;
@@ -31,7 +32,7 @@ public class LoanDisbursementService implements ILoanDisbursementService {
     private LoanRequestRepository loanRequestRepository;
 
     @Autowired
-    private PaymentGatewayService paymentGatewayService;
+    private IPaymentGatewayService paymentGatewayService;
 
     @Autowired
     private TransactionService transactionService;

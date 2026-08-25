@@ -1,12 +1,10 @@
 package com.finance.loan.service.interfac;
 
-import com.finance.loan.dto.output.PaymentGatewayResponse;
-import com.finance.loan.entity.User;
+import com.finance.loan.dto.internal.PaymentPayoutRequest;
+import com.finance.loan.dto.internal.PaymentGatewayResponse;
 
-import java.math.BigDecimal;
 
 public interface IPaymentGatewayService {
-    PaymentGatewayResponse payout(User platformAccount, User borrower, BigDecimal amount);
+    PaymentGatewayResponse payout(PaymentPayoutRequest paymentPayoutRequest);
 
-    PaymentGatewayResponse collect(User borrower, User platformAccount, BigDecimal amount);
 }

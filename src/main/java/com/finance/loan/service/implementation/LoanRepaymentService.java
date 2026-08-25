@@ -1,7 +1,7 @@
 package com.finance.loan.service.implementation;
 
 import com.finance.loan.dto.output.LoanPaymentResult;
-import com.finance.loan.dto.output.PaymentGatewayResponse;
+import com.finance.loan.dto.internal.PaymentGatewayResponse;
 import com.finance.loan.entity.*;
 import com.finance.loan.event.LoanPaymentEvent;
 import com.finance.loan.exception.OurException;

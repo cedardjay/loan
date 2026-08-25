@@ -1,4 +1,4 @@
-package com.finance.loan.dto.output;
+package com.finance.loan.dto.internal;
 
 import com.finance.loan.entity.TransactionStatus;
 import lombok.Builder;

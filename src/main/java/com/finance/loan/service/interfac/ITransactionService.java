@@ -9,10 +9,11 @@ import java.util.List;
 public interface ITransactionService {
 
 
-    Transaction recordDisbursement(User admin, User borrower,
-                                   LoanRequest loanRequest,
-                                   BigDecimal amount,
-                                    TransactionStatus status);
+    Transaction recordDisbursement(User platformAccount, User borrower, LoanRequest loanRequest,
+                                   BigDecimal amount, PaymentMethod paymentMethod, String accountNumber);
+
+    Transaction recordRepayment(User borrower, User platformAccount, LoanRequest loanRequest,
+                                BigDecimal amount, PaymentMethod paymentMethod, String accountNumber);
 
     Transaction updateTransactionResult(Transaction tx, String internalId, TransactionStatus status);
 

@@ -22,7 +22,7 @@ public class LoanDisbursementController {
         return ResponseEntity.ok(loanDisbursementService.requestDisbursal(disbursalRequestIN, email));
     }
 
-    // DISBURSE (SUPERADMIN)
+    // DISBURSE (SUPERADMIN, admin)
     @PostMapping("/{id}/approve")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
     public ResponseEntity<LoanDisbursementResult> disburseLoan(@PathVariable Long id) {

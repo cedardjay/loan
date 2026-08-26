@@ -2,11 +2,10 @@ package com.finance.loan.service.implementation;
 
 import com.finance.loan.dto.input.PayoutAccountIN;
 import com.finance.loan.dto.output.PayoutAccountDTO;
-import com.finance.loan.entity.PayoutAccount;
-import com.finance.loan.entity.PayoutType;
+import com.finance.loan.entity.PaymentAccount;
 import com.finance.loan.entity.User;
 import com.finance.loan.exception.OurException;
-import com.finance.loan.repo.PayoutAccountRepository;
+import com.finance.loan.repo.PaymentAccountRepository;
 import com.finance.loan.repo.UserRepository;
 import com.finance.loan.service.interfac.IPayoutAccountService;
 import com.finance.loan.utils.PayoutAccountUtils;
@@ -20,7 +19,7 @@ import java.util.Optional;
 public class PayoutAccountService implements IPayoutAccountService {
 
     @Autowired
-    private PayoutAccountRepository payoutAccountRepository;
+    private PaymentAccountRepository payoutAccountRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -33,16 +32,16 @@ public class PayoutAccountService implements IPayoutAccountService {
 
         String normalized = normalizeAccountNumber(requestDTO.getAccountNumber());
 
-        Optional<PayoutAccount> existing = payoutAccountRepository.findByUserIdAndAccountNumber(user.getId(), normalized);
+        Optional<PaymentAccount> existing = payoutAccountRepository.findByUserIdAndAccountNumber(user.getId(), normalized);
 
         if (existing.isPresent()) {
             // --- EXECUTE (unset old default, set this one) ---
             payoutAccountRepository.clearDefaultForUser(user.getId());
-            PayoutAccount account = existing.get();
+            PaymentAccount account = existing.get();
             account.setIsDefault(true);
 
             // --- PERSIST ---
-            PayoutAccount saved = payoutAccountRepository.save(account);
+            PaymentAccount saved = payoutAccountRepository.save(account);
 
             // --- RETURN ---
             return PayoutAccountUtils.mapEntityToOutput(saved);
@@ -59,14 +58,14 @@ public class PayoutAccountService implements IPayoutAccountService {
         // --- EXECUTE ---
         payoutAccountRepository.clearDefaultForUser(user.getId());
 
-        PayoutAccount payoutAccount = new PayoutAccount();
+        PaymentAccount payoutAccount = new PaymentAccount();
         payoutAccount.setUser(user);
         payoutAccount.setType(requestDTO.getType());
         payoutAccount.setAccountNumber(normalized);
         payoutAccount.setIsDefault(true);
 
         // --- PERSIST ---
-        PayoutAccount saved = payoutAccountRepository.save(payoutAccount);
+        PaymentAccount saved = payoutAccountRepository.save(payoutAccount);
 
         // --- RETURN ---
         return PayoutAccountUtils.mapEntityToOutput(saved);
@@ -83,7 +82,7 @@ public class PayoutAccountService implements IPayoutAccountService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new OurException("User not found", 404));
 
-        PayoutAccount payoutAccount = payoutAccountRepository.findByUserIdAndIsDefaultTrue(user.getId())
+        PaymentAccount payoutAccount = payoutAccountRepository.findByUserIdAndIsDefaultTrue(user.getId())
                 .orElseThrow(() -> new OurException("No default payout account found", 404));
 
         // --- RETURN ---
@@ -98,7 +97,7 @@ public class PayoutAccountService implements IPayoutAccountService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new OurException("User not found", 404));
 
-        PayoutAccount payoutAccount = payoutAccountRepository.findByUserId(user.getId())
+        PaymentAccount payoutAccount = payoutAccountRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new OurException("Payout Account not found", 404));
 
         // --- RETURN ---
@@ -114,7 +113,7 @@ public class PayoutAccountService implements IPayoutAccountService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new OurException("User not found", 404));
 
-        PayoutAccount payoutAccount = payoutAccountRepository.findByUserId(userId)
+        PaymentAccount payoutAccount = payoutAccountRepository.findByUserId(userId)
                 .orElseThrow(() -> new OurException("Payout method not found", 404));
 
         // --- RETURN ---

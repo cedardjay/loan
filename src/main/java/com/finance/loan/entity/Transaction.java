@@ -40,8 +40,11 @@ public class Transaction {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
-    @Column(nullable = false)
-    private PayoutType payoutType;
+    private OperationType operationType;
+
+    private String accountNumber;
+
+    private PaymentMethod paymentMethod;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime transactionDate;

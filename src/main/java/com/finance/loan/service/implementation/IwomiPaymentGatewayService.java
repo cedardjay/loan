@@ -27,19 +27,19 @@ public class IwomiPaymentGatewayService implements IPaymentGatewayService {
     @Value("${payment.gateway.base-url}")
     private String baseUrl;
 
-    @Value("${payment.gateway.callback-url}")
+    @Value("${payment.gateway.callback-url:http://localhost:8081/webhooks/payment-gateway}") //spaceholder actually for now
     private String callbackUrl;
 
     @Autowired
     private IwomiGatewayCredentials credentials;
 
     @Override
-    public PaymentGatewayResponse payout(PaymentPayoutRequest payload) {
+    public PaymentGatewayResponse makePayment(PaymentPayoutRequest payload) {
 
         // --- BUILD RAW PAYLOAD ---
         IwomiPayoutRequest body = IwomiPayoutRequest.builder()
-                .opType("credit")
-                .type(payload.getType().toLowerCase())
+                .opType(String.valueOf(payload.getOperationType()).toLowerCase())
+                .type(String.valueOf(payload.getPaymentMethod()).toLowerCase())
                 .amount(payload.getAmount().toString())
                 .externalId(payload.getExternalId())
                 .motif(payload.getMotif())
@@ -53,7 +53,7 @@ public class IwomiPaymentGatewayService implements IPaymentGatewayService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(tokenManager.getToken());
-        headers.set("AccountKey", buildAccountKey(payload.getType().toLowerCase()));
+        headers.set("AccountKey", buildAccountKey(String.valueOf(payload.getPaymentMethod()).toLowerCase()));
 
         HttpEntity<IwomiPayoutRequest> request = new HttpEntity<>(body, headers);
 

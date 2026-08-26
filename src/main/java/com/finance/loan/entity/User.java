@@ -36,8 +36,8 @@ public class User implements UserDetails {
     @Column(name = "role", length = 20)
     private Role role;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private PayoutAccount payoutMethod;
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<PaymentAccount> payoutAccounts;
 
     //UserDetails Methods implementation
 

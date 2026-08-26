@@ -7,7 +7,9 @@ import com.finance.loan.entity.TransactionStatus;
 
 
 public interface IPaymentGatewayService {
-    PaymentGatewayResponse payout(PaymentPayoutRequest paymentPayoutRequest);
+
+    PaymentGatewayResponse makePayment(PaymentPayoutRequest payload);
+
     TransactionStatus mapStatus(String gatewayStatus);
 
 

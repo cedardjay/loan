@@ -1,7 +1,7 @@
 package com.finance.loan.dto.output;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.finance.loan.entity.PayoutType;
+import com.finance.loan.entity.PaymentMethod;
 import com.finance.loan.entity.TransactionStatus;
 import com.finance.loan.entity.TransactionType;
 import lombok.Builder;
@@ -18,7 +18,7 @@ public class TransactionDTO {
     private String senderName;
     private String receiverName;
     private BigDecimal amount;
-    private PayoutType paymentMethod;
+    private PaymentMethod paymentMethod;
     private String paymentReference;
     private LocalDateTime transactionDate;
     private String description;

@@ -144,11 +144,6 @@ public class LoanRequestController {
         return ResponseEntity.ok(repaymentScheduleService.getMyRepaymentSchedule(loanRequestId, email));
     }
 
-    @PostMapping("/my-requests/{id}/pay")
-    public ResponseEntity<LoanPaymentResult> payLoanInstallment(@PathVariable Long id) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return ResponseEntity.ok(loanRepaymentService.loanPayment(id, email));
-    }
 
     @GetMapping("/my-active")
     public ResponseEntity<List<LoanRequestDTO>> getMyActiveLoans() {

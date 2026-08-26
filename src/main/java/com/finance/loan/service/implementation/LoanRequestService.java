@@ -1,18 +1,13 @@
 package com.finance.loan.service.implementation;
 
-import com.finance.loan.dto.input.DisbursalRequestIN;
 import com.finance.loan.dto.input.LoanRequestIN;
 import com.finance.loan.dto.output.LoanRequestDTO;
 import com.finance.loan.entity.*;
 import com.finance.loan.event.*;
 import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.LoanRequestRepository;
-import com.finance.loan.repo.PayoutAccountRepository;
 import com.finance.loan.repo.UserRepository;
 import com.finance.loan.service.interfac.ILoanRequestService;
-import com.finance.loan.service.interfac.IPaymentGatewayService;
-import com.finance.loan.service.interfac.IRepaymentScheduleService;
-import com.finance.loan.service.interfac.ITransactionService;
 import com.finance.loan.utils.*;
 
 import org.springframework.beans.factory.annotation.Autowired;

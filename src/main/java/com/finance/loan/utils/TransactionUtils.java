@@ -9,17 +9,18 @@ import java.util.stream.Collectors;
 public class TransactionUtils {
 
     public static TransactionDTO mapTransactionEntityToOutput(Transaction transaction) {
-        TransactionDTO dto = new TransactionDTO();
-        dto.setTransactionId(transaction.getTransactionId());
-        dto.setSenderName(transaction.getSender().getName());
-        dto.setReceiverName(transaction.getReceiver().getName());
-        dto.setAmount(transaction.getAmount());
-        dto.setPaymentMethod(transaction.getPaymentMethod());
-        dto.setTransactionDate(transaction.getTransactionDate());
-        dto.setDescription(transaction.getDescription());
-        dto.setTransactionType(transaction.getTransactionType());
-        dto.setTransactionStatus(transaction.getTransactionStatus());
-        return dto;
+        return TransactionDTO.builder()
+                .transactionId(transaction.getTransactionId())
+                .senderName(transaction.getSender().getName())
+                .receiverName(transaction.getReceiver().getName())
+                .amount(transaction.getAmount())
+                .paymentMethod(transaction.getPaymentMethod())
+                .paymentReference(transaction.getPaymentReference())
+                .transactionDate(transaction.getTransactionDate())
+                .description(transaction.getDescription())
+                .transactionType(transaction.getTransactionType())
+                .transactionStatus(transaction.getTransactionStatus())
+                .build();
     }
 
     public static List<TransactionDTO> mapTransactionListToOutput(List<Transaction> transactions) {

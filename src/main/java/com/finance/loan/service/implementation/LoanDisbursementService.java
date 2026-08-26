@@ -9,7 +9,7 @@ import com.finance.loan.entity.*;
 import com.finance.loan.event.LoanDisbursedEvent;
 import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.LoanRequestRepository;
-import com.finance.loan.repo.PayoutAccountRepository;
+import com.finance.loan.repo.PaymentAccountRepository;
 import com.finance.loan.repo.UserRepository;
 import com.finance.loan.service.interfac.ILoanDisbursementService;
 import com.finance.loan.service.interfac.IPaymentGatewayService;
@@ -45,7 +45,7 @@ public class LoanDisbursementService implements ILoanDisbursementService {
     private ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    private PayoutAccountRepository payoutAccountRepository;
+    private PaymentAccountRepository payoutAccountRepository;
 
 
 
@@ -58,7 +58,7 @@ public class LoanDisbursementService implements ILoanDisbursementService {
         LoanRequest loanRequest = loanRequestRepository.findById(requestDTO.getLoanRequestId())
                 .orElseThrow(() -> new OurException("Loan request not found", 404));
 
-        PayoutAccount payoutAccount = payoutAccountRepository.findById(requestDTO.getPayoutAccountId())
+        PaymentAccount payoutAccount = payoutAccountRepository.findById(requestDTO.getPayoutAccountId())
                 .orElseThrow(() -> new OurException("Payout account not found", 404));
 
         // --- VALIDATE ---
@@ -96,13 +96,10 @@ public class LoanDisbursementService implements ILoanDisbursementService {
 
         User borrower = loanRequest.getBorrower();
 
-        PayoutAccount payoutAccount = loanRequest.getPayoutAccount();
+        PaymentAccount payoutAccount = loanRequest.getPayoutAccount();
 
         User platform = userRepository.findByEmail("platform@system.internal")
                 .orElseThrow(() -> new IllegalStateException("Platform account not seeded"));
-
-        PayoutAccount platformPayoutAccount = payoutAccountRepository.findByUserId(platform.getId())
-                .orElseThrow(() -> new IllegalStateException("Platform payout account not set"));
 
 // --- VALIDATE ---
         if (loanRequest.getStatus() != LoanStatus.FULLY_FUNDED) {
@@ -119,12 +116,12 @@ public class LoanDisbursementService implements ILoanDisbursementService {
         //record a pending transaction
        Transaction tx = transactionService.recordDisbursement(
                 platform, borrower, loanRequest,
-                amount, TransactionStatus.PENDING
+                amount, loanRequest.getPayoutAccount().getType(), loanRequest.getPayoutAccount().getAccountNumber()
         );
 
         PaymentPayoutRequest payload = PaymentPayoutRequest.builder()
-                .opType("credit")
-                .type(String.valueOf(payoutAccount.getType()))
+                .operationType(OperationType.CREDIT)
+                .paymentMethod(payoutAccount.getType())
                 .amount(amount)
                 .externalId(tx.getPaymentReference())
                 .motif("Loan disbursal")
@@ -132,7 +129,7 @@ public class LoanDisbursementService implements ILoanDisbursementService {
                 .country("cm - Cameroon")
                 .build();
 
-        PaymentGatewayResponse result = paymentGatewayService.payout(payload);
+        PaymentGatewayResponse result = paymentGatewayService.makePayment(payload);
 
        Transaction updatedTx = transactionService.updateTransactionResult(tx, result.getInternalId(), result.getStatus());
 

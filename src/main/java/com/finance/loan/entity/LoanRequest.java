@@ -67,5 +67,5 @@ public class LoanRequest {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payout_account_id")
-    private PayoutAccount payoutAccount;
+    private PaymentAccount payoutAccount; //account for disbursal
 }

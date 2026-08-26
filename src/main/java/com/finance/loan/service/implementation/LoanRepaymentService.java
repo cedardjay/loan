@@ -1,5 +1,7 @@
 package com.finance.loan.service.implementation;
 
+import com.finance.loan.dto.input.PayoutAccountIN;
+import com.finance.loan.dto.internal.PaymentPayoutRequest;
 import com.finance.loan.dto.output.LoanPaymentResult;
 import com.finance.loan.dto.internal.PaymentGatewayResponse;
 import com.finance.loan.entity.*;
@@ -9,6 +11,7 @@ import com.finance.loan.repo.LoanRequestRepository;
 import com.finance.loan.repo.RepaymentScheduleRepository;
 import com.finance.loan.repo.UserRepository;
 import com.finance.loan.service.interfac.ILoanRepaymentService;
+import com.finance.loan.service.interfac.IPaymentGatewayService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -31,7 +34,7 @@ public class LoanRepaymentService implements ILoanRepaymentService {
     private RepaymentScheduleRepository repaymentScheduleRepository;
 
     @Autowired
-    private PaymentGatewayService paymentGatewayService;
+    private IPaymentGatewayService paymentGatewayService;
 
     @Autowired
     private TransactionService transactionService;
@@ -40,13 +43,14 @@ public class LoanRepaymentService implements ILoanRepaymentService {
     private ApplicationEventPublisher eventPublisher;
 
 
-    @Override
     @Transactional
-    public LoanPaymentResult loanPayment(Long loanId, String borrowerEmail) {
+    @Override
+    public LoanPaymentResult loanPayment(Long loanId, PayoutAccountIN payerDetails, String borrowerEmail) {
 
         // --- FETCH ---
         User borrower = userRepository.findByEmail(borrowerEmail)
                 .orElseThrow(() -> new OurException("Borrower not found", 404));
+
 
         LoanRequest loanRequest = loanRequestRepository.findById(loanId)
                 .orElseThrow(() -> new OurException("Loan not found with id: " + loanId, 404));
@@ -60,6 +64,8 @@ public class LoanRepaymentService implements ILoanRepaymentService {
 
         User platformAccount = userRepository.findByEmail("platform@system.internal")
                 .orElseThrow(() -> new IllegalStateException("Platform account not seeded"));
+
+
 
         // --- VALIDATE ---
         if (loanRequest.getStatus() != LoanStatus.ACTIVE) {
@@ -75,29 +81,41 @@ public class LoanRepaymentService implements ILoanRepaymentService {
                 : BigDecimal.ZERO;
         BigDecimal paymentAmount = schedule.getAmountDue().subtract(alreadyPaid);
 
-        // --- EXECUTE (submit only — gateway confirms later via webhook) ---
-        PaymentGatewayResponse result = paymentGatewayService.collect(borrower, platformAccount, paymentAmount);
-
-        // VALIDATE — only catches immediate rejection (e.g. invalid card), not final outcome
-        if (!result.isAccepted()) {
-            throw new OurException("Payment gateway rejected the request: " + result.getErrorMessage(), 400);
-        }
 
         // --- PERSIST (PERSIST A PENDING TRANSACTION WHILE THE GATEWAY PROCESSES THE ACTUAL MONEY MOVEMENT) ---
-        transactionService.recordPendingRepayment(
-                borrower, platformAccount, loanRequest, schedule,
-                paymentAmount, result.getReference()
+       Transaction tx = transactionService.recordRepayment(
+                borrower, platformAccount, loanRequest,
+                paymentAmount, payerDetails.getType(), payerDetails.getAccountNumber()
         );
+
+
+        PaymentPayoutRequest payload = PaymentPayoutRequest.builder()
+                .operationType(OperationType.DEBIT)
+                .paymentMethod(payerDetails.getType())
+                .amount(paymentAmount)
+                .externalId(tx.getPaymentReference())
+                .motif("Loan repayment")
+                .tel(payerDetails.getAccountNumber())
+                .country("cm - Cameroon")
+                .build();
+
+
+        // --- EXECUTE (submit only — gateway confirms later via webhook or backend polling) ---
+        PaymentGatewayResponse result = paymentGatewayService.makePayment(payload);
+
+        Transaction updatedTx = transactionService.updateTransactionResult(tx, result.getInternalId(), result.getStatus());
+
 
         // --- RETURN ---
         return LoanPaymentResult.builder()
-                .scheduleId(schedule.getScheduleId())
-                .installmentNumber(schedule.getInstallmentNumber())
-                .amountPaid(paymentAmount)
-                .newStatus(TransactionStatus.PENDING)
-                .paymentReference(result.getReference())
+                .loanId(loanId)
+                .paymentAmount(paymentAmount)
+                .status(updatedTx.getTransactionStatus())
+                .paymentReference(updatedTx.getPaymentReference())
                 .build();
     }
+
+
 
     //SETTLE THE REPAYMENT IF THE PAYMENT GATEWAY DOES THE CASH MOVEMENT
     @Override

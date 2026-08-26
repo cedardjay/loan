@@ -56,7 +56,7 @@ public class IwomiPayReconciliationService implements IPaymentReconciliationServ
     // --- POLLING ---
     @Scheduled(fixedDelay = 10000) // every 10 seconds, adjust as needed
     public void pollPendingTransactions() {
-        List<Transaction> pending = transactionRepository.findByStatus(TransactionStatus.PENDING);
+        List<Transaction> pending = transactionRepository.findByTransactionStatus(TransactionStatus.PENDING);
 
         for (Transaction transaction : pending) {
             IwomiPayoutResponse result = paymentGatewayService.checkStatus(transaction.getInternalId());

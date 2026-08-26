@@ -31,7 +31,7 @@ public class TransactionService implements ITransactionService {
 
     @Override
     public Transaction recordDisbursement(User platformAccount, User borrower, LoanRequest loanRequest,
-                                          BigDecimal amount, TransactionStatus status) {
+                                          BigDecimal amount, PaymentMethod paymentMethod, String accountNumber) {
 
         String paymentReference = UUID.randomUUID().toString();
 
@@ -40,11 +40,34 @@ public class TransactionService implements ITransactionService {
                 .receiver(borrower)
                 .loanRequest(loanRequest)
                 .amount(amount)
-                .payoutType(loanRequest.getPayoutAccount().getType())
+                .paymentMethod(paymentMethod)
+                .accountNumber(accountNumber)
                 .transactionDate(LocalDateTime.now())
                 .description("Loan disbursement - Ref: " + paymentReference)
                 .transactionType(TransactionType.DISBURSEMENT)
-                .transactionStatus(status)
+                .transactionStatus(TransactionStatus.PENDING)
+                .paymentReference(paymentReference)
+                .build());
+    }
+
+
+    @Override
+    public Transaction recordRepayment(User borrower, User platformAccount, LoanRequest loanRequest,
+                                       BigDecimal amount, PaymentMethod paymentMethod, String accountNumber) {
+
+        String paymentReference = UUID.randomUUID().toString();
+
+        return transactionRepository.save(Transaction.builder()
+                .sender(borrower)
+                .receiver(platformAccount)
+                .loanRequest(loanRequest)
+                .amount(amount)
+                .paymentMethod(paymentMethod)
+                .accountNumber(accountNumber)
+                .transactionDate(LocalDateTime.now())
+                .description("Loan repayment - Ref: " + paymentReference)
+                .transactionType(TransactionType.REPAYMENT)
+                .transactionStatus(TransactionStatus.PENDING)
                 .paymentReference(paymentReference)
                 .build());
     }

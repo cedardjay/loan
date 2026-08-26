@@ -5,6 +5,7 @@ import com.finance.loan.entity.*;
 import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.LoanRequestRepository;
 import com.finance.loan.repo.TransactionRepository;
+import com.finance.loan.repo.UserRepository;
 import com.finance.loan.service.interfac.ITransactionService;
 import com.finance.loan.utils.TransactionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class TransactionService implements ITransactionService {
@@ -23,46 +25,35 @@ public class TransactionService implements ITransactionService {
     @Autowired
     private LoanRequestRepository loanRequestRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
 
     @Override
-    public Transaction recordDisbursement(User platformAccount, User borrower,
-                                                   LoanRequest loanRequest,
-                                                   BigDecimal amount,
-                                                   String paymentReference, TransactionStatus status) {
-        return
-        transactionRepository.save(Transaction.builder()
+    public Transaction recordDisbursement(User platformAccount, User borrower, LoanRequest loanRequest,
+                                          BigDecimal amount, TransactionStatus status) {
+
+        String paymentReference = UUID.randomUUID().toString();
+
+        return transactionRepository.save(Transaction.builder()
                 .sender(platformAccount)
                 .receiver(borrower)
                 .loanRequest(loanRequest)
                 .amount(amount)
-                .paymentMethod(String.valueOf(loanRequest.getPayoutAccount().getType()))
+                .payoutType(loanRequest.getPayoutAccount().getType())
                 .transactionDate(LocalDateTime.now())
                 .description("Loan disbursement - Ref: " + paymentReference)
                 .transactionType(TransactionType.DISBURSEMENT)
                 .transactionStatus(status)
                 .paymentReference(paymentReference)
                 .build());
-
     }
 
 
-
-     @Override
-    public void recordPendingRepayment(User borrower, User platformAccount, LoanRequest loanRequest, RepaymentSchedule schedule,
-                                BigDecimal amount, String paymentReference) {
-        transactionRepository.save(Transaction.builder()
-                .sender(borrower)
-                .receiver(platformAccount)
-                .loanRequest(loanRequest)
-                .repaymentSchedule(schedule)
-                .amount(amount)
-                .paymentMethod("MOCK_GATEWAY")
-                .transactionDate(LocalDateTime.now())
-                .paymentReference(paymentReference)
-                .description("Loan repayment - Ref:" + paymentReference)
-                .transactionType(TransactionType.REPAYMENT)
-                .transactionStatus(TransactionStatus.PENDING)
-                .build());
+    public Transaction updateTransactionResult(Transaction tx, String internalId, TransactionStatus status) {
+        tx.setInternalId(internalId);
+        tx.setTransactionStatus(status);
+        return transactionRepository.save(tx);
     }
 
 
@@ -84,6 +75,24 @@ public class TransactionService implements ITransactionService {
         return transactionRepository.save(tx);
     }
 
+    @Override
+    public TransactionDTO getStatusByReference(String paymentReference, String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new OurException("User not found", 404));
+
+        Transaction tx = transactionRepository.findByPaymentReference(paymentReference)
+                .orElseThrow(() -> new OurException("Transaction not found", 404));
+
+        if (!tx.getReceiver().getId().equals(user.getId()) && !tx.getSender().getId().equals(user.getId())) {
+            throw new OurException("You do not have access to this transaction", 403);
+        }
+
+        return TransactionDTO.builder()
+                .paymentReference(tx.getPaymentReference())
+                .transactionStatus(tx.getTransactionStatus())
+                .build();
+    }
 
     @Override
     public List<TransactionDTO> getTransactionsByLoanRequest(Long loanRequestId) {

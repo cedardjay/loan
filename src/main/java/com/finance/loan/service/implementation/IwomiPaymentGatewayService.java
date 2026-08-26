@@ -8,10 +8,7 @@ import com.finance.loan.entity.TransactionStatus;
 import com.finance.loan.service.interfac.IPaymentGatewayService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -75,7 +72,7 @@ public class IwomiPaymentGatewayService implements IPaymentGatewayService {
     }
 
 
-    private String buildAccountKey(String type) {
+    public String buildAccountKey(String type) {
         IwomiGatewayCredentials.TypeCredentials creds = credentials.getTypes().get(type);
 
         if (creds == null) {
@@ -86,7 +83,7 @@ public class IwomiPaymentGatewayService implements IPaymentGatewayService {
         return Base64.getEncoder().encodeToString(raw.getBytes(StandardCharsets.UTF_8));
     }
 
-    private TransactionStatus mapStatus(String gatewayStatus) {
+    public TransactionStatus mapStatus(String gatewayStatus) {
         if (gatewayStatus == null) {
             return TransactionStatus.FAILED;
         }
@@ -96,6 +93,18 @@ public class IwomiPaymentGatewayService implements IPaymentGatewayService {
             case "1000" -> TransactionStatus.PENDING;
             default -> TransactionStatus.FAILED;
         };
+    }
+
+
+    @Override
+    public IwomiPayoutResponse checkStatus(String internalId) {
+
+        ResponseEntity<IwomiPayoutResponse> response = restTemplate.getForEntity(
+                baseUrl + "/iwomipayStatus/" + internalId,
+                IwomiPayoutResponse.class
+        );
+
+        return response.getBody();
     }
 }
 

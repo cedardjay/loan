@@ -30,7 +30,7 @@ public class Transaction {
     private User receiver;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "loan_request_id", nullable = false)
+    @JoinColumn(name = "loan_request_id")
     private LoanRequest loanRequest;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -41,7 +41,7 @@ public class Transaction {
     private BigDecimal amount;
 
     @Column(nullable = false)
-    private String paymentMethod;
+    private PayoutType payoutType;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime transactionDate;
@@ -50,10 +50,14 @@ public class Transaction {
     private String description;
 
     @Column(nullable = false)
-    private String paymentReference;
+    private String paymentReference; //externalId
 
     @Column
-    private LocalDateTime settledAt;   // null until webhook fires
+    private String internalId;
+
+
+    @Column
+    private LocalDateTime settledAt;   // null until settlement
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)

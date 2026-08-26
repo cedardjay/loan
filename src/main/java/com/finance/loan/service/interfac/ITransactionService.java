@@ -12,9 +12,14 @@ public interface ITransactionService {
     Transaction recordDisbursement(User admin, User borrower,
                                    LoanRequest loanRequest,
                                    BigDecimal amount,
-                                   String paymentReference, TransactionStatus status);
+                                    TransactionStatus status);
 
-    Transaction settleTransaction(String paymentReference, TransactionStatus status);
+    Transaction updateTransactionResult(Transaction tx, String internalId, TransactionStatus status);
+
+
+        Transaction settleTransaction(String paymentReference, TransactionStatus status);
+
+    TransactionDTO getStatusByReference(String paymentReference, String email);
 
     List<TransactionDTO> getTransactionsByLoanRequest(Long loanRequestId);
 
@@ -24,6 +29,5 @@ public interface ITransactionService {
 
     List<TransactionDTO> getMyTransactions(String email);
 
-    void recordPendingRepayment(User borrower, User platformAccount, LoanRequest loanRequest, RepaymentSchedule schedule, BigDecimal paymentAmount, String paymentReference);
 
     }

@@ -1,6 +1,7 @@
 package com.finance.loan.repo;
 
 import com.finance.loan.entity.Transaction;
+import com.finance.loan.entity.TransactionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,4 +16,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Transaction> findBySender_EmailOrReceiver_Email(String email, String email1);
 
     Optional<Transaction> findByPaymentReference(String paymentReference);
+
+    List<Transaction> findByStatus(TransactionStatus transactionStatus);
 }

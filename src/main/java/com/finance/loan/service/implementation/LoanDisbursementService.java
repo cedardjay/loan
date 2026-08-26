@@ -14,6 +14,7 @@ import com.finance.loan.repo.UserRepository;
 import com.finance.loan.service.interfac.ILoanDisbursementService;
 import com.finance.loan.service.interfac.IPaymentGatewayService;
 import com.finance.loan.service.interfac.IRepaymentScheduleService;
+import com.finance.loan.service.interfac.ITransactionService;
 import com.finance.loan.utils.LoanRequestUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,7 @@ public class LoanDisbursementService implements ILoanDisbursementService {
     private IPaymentGatewayService paymentGatewayService;
 
     @Autowired
-    private TransactionService transactionService;
+    private ITransactionService transactionService;
 
     @Autowired
     private IRepaymentScheduleService repaymentScheduleService;
@@ -115,11 +116,17 @@ public class LoanDisbursementService implements ILoanDisbursementService {
 // --- EXECUTE ---  PERSIST
         BigDecimal amount = loanRequest.getRequestedAmount();
 
+        //record a pending transaction
+       Transaction tx = transactionService.recordDisbursement(
+                platform, borrower, loanRequest,
+                amount, TransactionStatus.PENDING
+        );
+
         PaymentPayoutRequest payload = PaymentPayoutRequest.builder()
                 .opType("credit")
                 .type(String.valueOf(payoutAccount.getType()))
                 .amount(amount)
-                .externalId(loanRequest.getRequestId().toString())
+                .externalId(tx.getPaymentReference())
                 .motif("Loan disbursal")
                 .tel(payoutAccount.getAccountNumber())
                 .country("cm - Cameroon")
@@ -127,33 +134,16 @@ public class LoanDisbursementService implements ILoanDisbursementService {
 
         PaymentGatewayResponse result = paymentGatewayService.payout(payload);
 
-//record a pending transaction immediately
-      transactionService.recordDisbursement(
-                platform, borrower, loanRequest,
-                amount, result.getInternalId(), TransactionStatus.PENDING
-        );
+       Transaction updatedTx = transactionService.updateTransactionResult(tx, result.getInternalId(), result.getStatus());
 
-        switch (result.getStatus()) {
-            case COMPLETED:
-               Transaction completedTx = transactionService.settleTransaction(result.getInternalId(), result.getStatus());
-                onDisbursementSettled(completedTx);
-                break;
-
-            case FAILED:
-               transactionService.settleTransaction(result.getInternalId(), result.getStatus());
-                throw new OurException("rejected the request: " + result.getMessage(), 400);
-
-            default:
-                throw new OurException("Unknown gateway status: " + result.getStatus(), 500);
-        }
 
         // --- RETURN ---
         return LoanDisbursementResult.builder()
                 .loanId(loanId)
                 .borrowerEmail(borrower.getEmail())
                 .amount(amount)
-                .paymentReference(result.getInternalId())
-                .status(result.getStatus())
+                .paymentReference(updatedTx.getPaymentReference())
+                .status(updatedTx.getTransactionStatus())
                 .build();
 
     }

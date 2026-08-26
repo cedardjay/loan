@@ -1,8 +1,8 @@
 package com.finance.loan.controller;
 
-import com.finance.loan.dto.input.GatewayWebhookPayload;
+import com.finance.loan.dto.input.IwomiPayoutResponse;
 import com.finance.loan.service.implementation.PaymentReconciliationService;
-import com.finance.loan.service.implementation.TransactionService;
+import com.finance.loan.service.interfac.IPaymentReconciliationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,14 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class PaymentWebhookController {
 
-    //THIS IS JUST MOCK IMPLEMENTATION
 
     @Autowired
-    private PaymentReconciliationService paymentReconciliationService;
+    private IPaymentReconciliationService paymentReconciliationService;
 
     @PostMapping("/payment-gateway")
-    public ResponseEntity<Void> handleGatewayWebhook(@RequestBody GatewayWebhookPayload payload) {
-        paymentReconciliationService.handleGatewayWebhook(payload);
+    public ResponseEntity<Void> reconcileTransaction(@RequestBody IwomiPayoutResponse payload) {
+        paymentReconciliationService.reconcileTransaction(payload);
         return ResponseEntity.ok().build();
     }
 }

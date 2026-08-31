@@ -66,6 +66,6 @@ public class LoanRequest {
     private List<Transaction> transactions = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payout_account_id")
-    private PaymentAccount payoutAccount; //account for disbursal
+    @JoinColumn(name = "payment_account_id")
+    private PaymentAccount paymentAccount; //account for disbursal
 }

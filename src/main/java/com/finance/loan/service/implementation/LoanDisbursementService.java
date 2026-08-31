@@ -17,12 +17,14 @@ import com.finance.loan.service.interfac.IRepaymentScheduleService;
 import com.finance.loan.service.interfac.ITransactionService;
 import com.finance.loan.utils.LoanRequestUtils;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 
+@Slf4j
 @Service
 public class LoanDisbursementService implements ILoanDisbursementService {
 
@@ -75,7 +77,7 @@ public class LoanDisbursementService implements ILoanDisbursementService {
         }
 
         // --- EXECUTE ---
-        loanRequest.setPayoutAccount(payoutAccount);
+        loanRequest.setPaymentAccount(payoutAccount);
         loanRequest.setStatus(LoanStatus.DISBURSAL_REQUESTED);
 
         // --- PERSIST ---
@@ -96,14 +98,14 @@ public class LoanDisbursementService implements ILoanDisbursementService {
 
         User borrower = loanRequest.getBorrower();
 
-        PaymentAccount payoutAccount = loanRequest.getPayoutAccount();
+        PaymentAccount payoutAccount = loanRequest.getPaymentAccount();
 
         User platform = userRepository.findByEmail("platform@system.internal")
                 .orElseThrow(() -> new IllegalStateException("Platform account not seeded"));
 
 // --- VALIDATE ---
-        if (loanRequest.getStatus() != LoanStatus.FULLY_FUNDED) {
-            throw new OurException("Only fully funded loans can be disbursed", 400);
+        if (loanRequest.getStatus() != LoanStatus.DISBURSAL_REQUESTED) {
+            throw new OurException("loan cannot be disbursed, invalid status", 400);
         }
 
         if (payoutAccount == null) {
@@ -116,12 +118,12 @@ public class LoanDisbursementService implements ILoanDisbursementService {
         //record a pending transaction
        Transaction tx = transactionService.recordDisbursement(
                 platform, borrower, loanRequest,
-                amount, loanRequest.getPayoutAccount().getType(), loanRequest.getPayoutAccount().getAccountNumber()
+                amount, loanRequest.getPaymentAccount().getPaymentMethod(), loanRequest.getPaymentAccount().getAccountNumber()
         );
 
         PaymentPayoutRequest payload = PaymentPayoutRequest.builder()
                 .operationType(OperationType.CREDIT)
-                .paymentMethod(payoutAccount.getType())
+                .paymentMethod(payoutAccount.getPaymentMethod())
                 .amount(amount)
                 .externalId(tx.getPaymentReference())
                 .motif("Loan disbursal")
@@ -130,6 +132,11 @@ public class LoanDisbursementService implements ILoanDisbursementService {
                 .build();
 
         PaymentGatewayResponse result = paymentGatewayService.makePayment(payload);
+
+        if (result.getStatus() == TransactionStatus.FAILED) {
+            log.warn("Disbursement failed for loanId={}, reference={}, gatewayMessage={}",
+                    loanId, tx.getPaymentReference(), result.getMessage());
+        }
 
        Transaction updatedTx = transactionService.updateTransactionResult(tx, result.getInternalId(), result.getStatus());
 

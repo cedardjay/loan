@@ -13,6 +13,7 @@ public interface ITransactionService {
                                    BigDecimal amount, PaymentMethod paymentMethod, String accountNumber);
 
     Transaction recordRepayment(User borrower, User platformAccount, LoanRequest loanRequest,
+                                RepaymentSchedule schedule,
                                 BigDecimal amount, PaymentMethod paymentMethod, String accountNumber);
 
     Transaction updateTransactionResult(Transaction tx, String internalId, TransactionStatus status);

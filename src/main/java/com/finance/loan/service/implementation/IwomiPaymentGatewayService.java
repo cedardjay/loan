@@ -53,7 +53,7 @@ public class IwomiPaymentGatewayService implements IPaymentGatewayService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(tokenManager.getToken());
-        headers.set("AccountKey", buildAccountKey(String.valueOf(payload.getPaymentMethod()).toLowerCase()));
+        headers.set("AccountKey", buildAccountKeyHardcoded(String.valueOf(payload.getPaymentMethod()).toLowerCase()));
 
         HttpEntity<IwomiPayoutRequest> request = new HttpEntity<>(body, headers);
 
@@ -70,6 +70,15 @@ public class IwomiPaymentGatewayService implements IPaymentGatewayService {
                 .status(mapStatus(raw != null ? raw.getStatus() : null))
                 .build();
     }
+
+    public String buildAccountKeyHardcoded(String type) {
+        return switch (type) {
+            case "momo" -> "NWUwMTZmYjgtZWYxMC00NThjLTgwYzQtNDQyZTk0NzA4ZWVlOjZlZjM5NjVmLWNjYjktNGY3MC04ODY0LTFjYTFkZThlN2M3ZA==";
+            case "om" -> "MzZmNGI2NWItYmJjZi00Y2E2LWI4ODEtMWJhNzZiOTVhYzM5OjBjZjQwZTgzLWUzZWItNGJjMS05NTA0LThkNmNkMzg3ODM0Mw==";
+            default -> throw new IllegalStateException("No gateway credentials configured for type: " + type);
+        };
+    }
+
 
 
     public String buildAccountKey(String type) {

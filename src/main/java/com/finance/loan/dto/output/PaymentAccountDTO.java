@@ -6,11 +6,11 @@ import lombok.Data;
 
 @Builder
 @Data
-public class PayoutAccountDTO {
+public class PaymentAccountDTO {
 
     private Long id;
 
-    private PaymentMethod type;
+    private PaymentMethod paymentMethod;
 
     private String accountNumber;
 

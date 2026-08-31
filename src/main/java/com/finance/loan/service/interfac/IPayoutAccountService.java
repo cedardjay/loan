@@ -1,14 +1,14 @@
 package com.finance.loan.service.interfac;
 
 import com.finance.loan.dto.input.PayoutAccountIN;
-import com.finance.loan.dto.output.PayoutAccountDTO;
+import com.finance.loan.dto.output.PaymentAccountDTO;
 
 public interface IPayoutAccountService {
-    PayoutAccountDTO createPayoutAccount(PayoutAccountIN payoutAccountIN, String email) ;
+    PaymentAccountDTO createPayoutAccount(PayoutAccountIN payoutAccountIN, String email) ;
 
-    PayoutAccountDTO getPayoutAccount(String email);
+    PaymentAccountDTO getPayoutAccount(String email);
 
-    PayoutAccountDTO getPayoutAccountByUserId(Long userId);
+    PaymentAccountDTO getPayoutAccountByUserId(Long userId);
 
-    PayoutAccountDTO getDefaultPayoutAccount(String email);
+    PaymentAccountDTO getDefaultPayoutAccount(String email);
 }

@@ -33,7 +33,7 @@ public class TransactionService implements ITransactionService {
     public Transaction recordDisbursement(User platformAccount, User borrower, LoanRequest loanRequest,
                                           BigDecimal amount, PaymentMethod paymentMethod, String accountNumber) {
 
-        String paymentReference = UUID.randomUUID().toString();
+        String paymentReference = "DIS-" + UUID.randomUUID();
 
         return transactionRepository.save(Transaction.builder()
                 .sender(platformAccount)
@@ -53,14 +53,16 @@ public class TransactionService implements ITransactionService {
 
     @Override
     public Transaction recordRepayment(User borrower, User platformAccount, LoanRequest loanRequest,
+                                       RepaymentSchedule schedule,
                                        BigDecimal amount, PaymentMethod paymentMethod, String accountNumber) {
 
-        String paymentReference = UUID.randomUUID().toString();
+        String paymentReference = "PAY-" + UUID.randomUUID();
 
         return transactionRepository.save(Transaction.builder()
                 .sender(borrower)
                 .receiver(platformAccount)
                 .loanRequest(loanRequest)
+                .repaymentSchedule(schedule)
                 .amount(amount)
                 .paymentMethod(paymentMethod)
                 .accountNumber(accountNumber)
@@ -72,7 +74,6 @@ public class TransactionService implements ITransactionService {
                 .build());
     }
 
-
     public Transaction updateTransactionResult(Transaction tx, String internalId, TransactionStatus status) {
         tx.setInternalId(internalId);
         tx.setTransactionStatus(status);
@@ -81,9 +82,9 @@ public class TransactionService implements ITransactionService {
 
 
     @Override
-    public Transaction settleTransaction(String paymentReference, TransactionStatus status) {
-        Transaction tx = transactionRepository.findByPaymentReference(paymentReference)
-                .orElseThrow(() -> new OurException("Unknown payment reference: " + paymentReference, 404));
+    public Transaction settleTransaction(String internalId, TransactionStatus status) {
+        Transaction tx = transactionRepository.findByInternalId(internalId)
+                .orElseThrow(() -> new OurException("Unknown : " + internalId, 404));
 
         // duplicate webhook guard — gateway often retries
         if (tx.getTransactionStatus() != TransactionStatus.PENDING) {

@@ -10,7 +10,7 @@ import lombok.Data;
 public class PayoutAccountIN {
 
     @NotNull(message = "Payment method is required")
-    private PaymentMethod type;
+    private PaymentMethod paymentMethod;
 
     @NotBlank(message = "Account number is required")
     private String accountNumber;

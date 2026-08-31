@@ -11,7 +11,6 @@ import java.util.Optional;
 public interface PaymentAccountRepository extends JpaRepository<PaymentAccount, Long> {
     Optional<PaymentAccount> findByUserId(Long userId);
 
-    boolean existsByUserIdAndAccountNumber(Long id, String normalized);
 
     Optional<PaymentAccount> findByUserIdAndAccountNumber(Long id, String normalized);
 

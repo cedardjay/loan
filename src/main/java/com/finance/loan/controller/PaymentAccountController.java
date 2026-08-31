@@ -2,7 +2,7 @@ package com.finance.loan.controller;
 
 
 import com.finance.loan.dto.input.PayoutAccountIN;
-import com.finance.loan.dto.output.PayoutAccountDTO;
+import com.finance.loan.dto.output.PaymentAccountDTO;
 import com.finance.loan.service.interfac.*;
 import jakarta.validation.Valid;
 
@@ -15,26 +15,26 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/payout-accounts")
-public class PayoutAccountController {
+public class PaymentAccountController {
 
     @Autowired
     IPayoutAccountService payoutAccountService;
 
     // create PAYOUT Account
     @PostMapping
-    public ResponseEntity<PayoutAccountDTO> createPayoutAccount(@Valid @RequestBody PayoutAccountIN payoutMethodIN ) {
+    public ResponseEntity<PaymentAccountDTO> createPayoutAccount(@Valid @RequestBody PayoutAccountIN payoutMethodIN ) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(payoutAccountService.createPayoutAccount(payoutMethodIN,email));
     }
 //get payout accounts
     @GetMapping
-    public ResponseEntity<PayoutAccountDTO> getPayoutAccount() {
+    public ResponseEntity<PaymentAccountDTO> getPayoutAccount() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(payoutAccountService.getPayoutAccount(email));
     }
 
     @GetMapping("/default")
-    public ResponseEntity<PayoutAccountDTO> getDefaultPayoutAccount() {
+    public ResponseEntity<PaymentAccountDTO> getDefaultPayoutAccount() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(payoutAccountService.getDefaultPayoutAccount(email));
     }
@@ -42,16 +42,16 @@ public class PayoutAccountController {
 //get by id
     @GetMapping("/{userId}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
-    public ResponseEntity<PayoutAccountDTO> getPayoutAccountByUserId(@PathVariable Long userId) {
+    public ResponseEntity<PaymentAccountDTO> getPayoutAccountByUserId(@PathVariable Long userId) {
         return ResponseEntity.ok(payoutAccountService.getPayoutAccountByUserId(userId));
     }
 
     @PostMapping("/platform")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERADMIN')")
-    public ResponseEntity<PayoutAccountDTO> setPlatformPayoutAccount(
+    public ResponseEntity<PaymentAccountDTO> setPlatformPayoutAccount(
             @Valid @RequestBody PayoutAccountIN requestDTO) {
 
-        PayoutAccountDTO response = payoutAccountService.createPayoutAccount(requestDTO, "platform@system.internal");
+        PaymentAccountDTO response = payoutAccountService.createPayoutAccount(requestDTO, "platform@system.internal");
         return ResponseEntity.ok(response);
     }
 

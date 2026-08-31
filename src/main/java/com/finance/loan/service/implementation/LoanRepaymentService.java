@@ -13,6 +13,7 @@ import com.finance.loan.repo.UserRepository;
 import com.finance.loan.service.interfac.ILoanRepaymentService;
 import com.finance.loan.service.interfac.IPaymentGatewayService;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+@Slf4j
 @Service
 public class LoanRepaymentService implements ILoanRepaymentService {
 
@@ -83,15 +85,14 @@ public class LoanRepaymentService implements ILoanRepaymentService {
 
 
         // --- PERSIST (PERSIST A PENDING TRANSACTION WHILE THE GATEWAY PROCESSES THE ACTUAL MONEY MOVEMENT) ---
-       Transaction tx = transactionService.recordRepayment(
-                borrower, platformAccount, loanRequest,
-                paymentAmount, payerDetails.getType(), payerDetails.getAccountNumber()
+        Transaction tx = transactionService.recordRepayment(
+                borrower, platformAccount, loanRequest, schedule,
+                paymentAmount, payerDetails.getPaymentMethod(), payerDetails.getAccountNumber()
         );
 
-
         PaymentPayoutRequest payload = PaymentPayoutRequest.builder()
-                .operationType(OperationType.DEBIT)
-                .paymentMethod(payerDetails.getType())
+                .operationType(OperationType.CREDIT)
+                .paymentMethod(payerDetails.getPaymentMethod())
                 .amount(paymentAmount)
                 .externalId(tx.getPaymentReference())
                 .motif("Loan repayment")
@@ -102,6 +103,11 @@ public class LoanRepaymentService implements ILoanRepaymentService {
 
         // --- EXECUTE (submit only — gateway confirms later via webhook or backend polling) ---
         PaymentGatewayResponse result = paymentGatewayService.makePayment(payload);
+
+        if (result.getStatus() == TransactionStatus.FAILED) {
+            log.warn("payment failed for loanId={}, reference={}, gatewayMessage={}",
+                    loanId, tx.getPaymentReference(), result.getMessage());
+        }
 
         Transaction updatedTx = transactionService.updateTransactionResult(tx, result.getInternalId(), result.getStatus());
 
@@ -136,8 +142,8 @@ public class LoanRepaymentService implements ILoanRepaymentService {
             loanRequestRepository.save(loanRequest);
         }
 
-        eventPublisher.publishEvent(new LoanPaymentEvent(
+       /* eventPublisher.publishEvent(new LoanPaymentEvent(
                 tx.getLoanRequest(), schedule,
-                tx.getSender().getEmail(), allPaid));
+                tx.getSender().getEmail(), allPaid));*/
     }
 }

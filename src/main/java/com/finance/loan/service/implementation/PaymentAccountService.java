@@ -1,14 +1,14 @@
 package com.finance.loan.service.implementation;
 
 import com.finance.loan.dto.input.PayoutAccountIN;
-import com.finance.loan.dto.output.PayoutAccountDTO;
+import com.finance.loan.dto.output.PaymentAccountDTO;
 import com.finance.loan.entity.PaymentAccount;
 import com.finance.loan.entity.User;
 import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.PaymentAccountRepository;
 import com.finance.loan.repo.UserRepository;
 import com.finance.loan.service.interfac.IPayoutAccountService;
-import com.finance.loan.utils.PayoutAccountUtils;
+import com.finance.loan.utils.PaymentAccountUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 @Service
-public class PayoutAccountService implements IPayoutAccountService {
+public class PaymentAccountService implements IPayoutAccountService {
 
     @Autowired
     private PaymentAccountRepository payoutAccountRepository;
@@ -25,7 +25,7 @@ public class PayoutAccountService implements IPayoutAccountService {
     private UserRepository userRepository;
 
     @Transactional
-    public PayoutAccountDTO createPayoutAccount(PayoutAccountIN requestDTO, String email) {
+    public PaymentAccountDTO createPayoutAccount(PayoutAccountIN requestDTO, String email) {
         // --- FETCH ---
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new OurException("User not found", 404));
@@ -44,7 +44,7 @@ public class PayoutAccountService implements IPayoutAccountService {
             PaymentAccount saved = payoutAccountRepository.save(account);
 
             // --- RETURN ---
-            return PayoutAccountUtils.mapEntityToOutput(saved);
+            return PaymentAccountUtils.mapEntityToOutput(saved);
         }
 
         // --- VALIDATE ---
@@ -60,7 +60,7 @@ public class PayoutAccountService implements IPayoutAccountService {
 
         PaymentAccount payoutAccount = new PaymentAccount();
         payoutAccount.setUser(user);
-        payoutAccount.setType(requestDTO.getType());
+        payoutAccount.setPaymentMethod(requestDTO.getPaymentMethod());
         payoutAccount.setAccountNumber(normalized);
         payoutAccount.setIsDefault(true);
 
@@ -68,7 +68,7 @@ public class PayoutAccountService implements IPayoutAccountService {
         PaymentAccount saved = payoutAccountRepository.save(payoutAccount);
 
         // --- RETURN ---
-        return PayoutAccountUtils.mapEntityToOutput(saved);
+        return PaymentAccountUtils.mapEntityToOutput(saved);
     }
 
     private String normalizeAccountNumber(String accountNumber) {
@@ -76,7 +76,7 @@ public class PayoutAccountService implements IPayoutAccountService {
     }
 
     //get default payout account
-    public PayoutAccountDTO getDefaultPayoutAccount(String email) {
+    public PaymentAccountDTO getDefaultPayoutAccount(String email) {
 
         // --- FETCH ---
         User user = userRepository.findByEmail(email)
@@ -86,12 +86,12 @@ public class PayoutAccountService implements IPayoutAccountService {
                 .orElseThrow(() -> new OurException("No default payout account found", 404));
 
         // --- RETURN ---
-        return PayoutAccountUtils.mapEntityToOutput(payoutAccount);
+        return PaymentAccountUtils.mapEntityToOutput(payoutAccount);
     }
 
 
     // GET PAYOUT METHOD
-    public PayoutAccountDTO getPayoutAccount(String email) {
+    public PaymentAccountDTO getPayoutAccount(String email) {
 
         // --- FETCH ---
         User user = userRepository.findByEmail(email)
@@ -101,13 +101,13 @@ public class PayoutAccountService implements IPayoutAccountService {
                 .orElseThrow(() -> new OurException("Payout Account not found", 404));
 
         // --- RETURN ---
-        return PayoutAccountUtils.mapEntityToOutput(payoutAccount);
+        return PaymentAccountUtils.mapEntityToOutput(payoutAccount);
     }
 
 
 
     // GET PAYOUT METHOD BY USER ID (ADMIN)
-    public PayoutAccountDTO getPayoutAccountByUserId(Long userId) {
+    public PaymentAccountDTO getPayoutAccountByUserId(Long userId) {
 
         // --- FETCH ---
         userRepository.findById(userId)
@@ -117,6 +117,6 @@ public class PayoutAccountService implements IPayoutAccountService {
                 .orElseThrow(() -> new OurException("Payout method not found", 404));
 
         // --- RETURN ---
-        return PayoutAccountUtils.mapEntityToOutput(payoutAccount);
+        return PaymentAccountUtils.mapEntityToOutput(payoutAccount);
     }
 }

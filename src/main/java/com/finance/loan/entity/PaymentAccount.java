@@ -18,7 +18,7 @@ public class PaymentAccount {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private PaymentMethod type;
+    private PaymentMethod paymentMethod;
 
     @Column(nullable = false)
     private String accountNumber;

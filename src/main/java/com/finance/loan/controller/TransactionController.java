@@ -34,7 +34,7 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.getMyTransactions(email));
     }
 
-    @GetMapping("/transactions/{paymentReference}/status")
+    @GetMapping("/{paymentReference}/status")
     public ResponseEntity<TransactionDTO> getTransactionStatus(@PathVariable String paymentReference) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(transactionService.getStatusByReference(paymentReference, email));

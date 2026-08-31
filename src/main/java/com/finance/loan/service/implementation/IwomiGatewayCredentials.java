@@ -10,7 +10,7 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "payment.gateway")
 @Data
 public class IwomiGatewayCredentials {
-    private Map<String, TypeCredentials> types; // "momo", "om"
+    private Map<String, TypeCredentials> types;
 
     @Data
     public static class TypeCredentials {

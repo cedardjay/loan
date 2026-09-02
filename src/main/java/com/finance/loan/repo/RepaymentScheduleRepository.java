@@ -14,6 +14,8 @@ import java.util.Optional;
 public interface RepaymentScheduleRepository extends JpaRepository<RepaymentSchedule, Long> {
     Optional<RepaymentSchedule> findFirstByLoanRequest_requestIdAndStatusInOrderByDueDateAsc(Long loanId, List<ScheduleStatus> pending);
 
+    List<RepaymentSchedule> findByLoanRequest_RequestId(Long requestId);
+
     List<RepaymentSchedule> findByLoanRequest_requestId(Long loanRequestId);
 }
 

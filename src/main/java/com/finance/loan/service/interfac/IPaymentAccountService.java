@@ -3,12 +3,14 @@ package com.finance.loan.service.interfac;
 import com.finance.loan.dto.input.PayoutAccountIN;
 import com.finance.loan.dto.output.PaymentAccountDTO;
 
-public interface IPayoutAccountService {
-    PaymentAccountDTO createPayoutAccount(PayoutAccountIN payoutAccountIN, String email) ;
+import java.util.List;
 
-    PaymentAccountDTO getPayoutAccount(String email);
+public interface IPaymentAccountService {
+    PaymentAccountDTO createPayoutAccount(PayoutAccountIN payoutAccountIN, String email) ;
 
     PaymentAccountDTO getPayoutAccountByUserId(Long userId);
 
     PaymentAccountDTO getDefaultPayoutAccount(String email);
+
+    List<PaymentAccountDTO> getPaymentAccounts(String email);
 }

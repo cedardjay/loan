@@ -6,6 +6,7 @@ import com.finance.loan.entity.*;
 import com.finance.loan.event.*;
 import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.LoanRequestRepository;
+import com.finance.loan.repo.RepaymentScheduleRepository;
 import com.finance.loan.repo.UserRepository;
 import com.finance.loan.service.interfac.ILoanRequestService;
 import com.finance.loan.utils.*;
@@ -29,6 +30,9 @@ public class LoanRequestService implements ILoanRequestService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    RepaymentScheduleRepository repaymentScheduleRepository;
 
 
     @Autowired
@@ -194,12 +198,40 @@ public class LoanRequestService implements ILoanRequestService {
 
     // GET MY ACTIVE LOANS (BORROWER)
     public List<LoanRequestDTO> getActiveLoansByBorrowerEmail(String email) {
-        // --- FETCH ---
         List<LoanRequest> activeLoans = loanRequestRepository
                 .findByBorrowerEmailAndStatus(email, LoanStatus.ACTIVE);
 
-        // --- RETURN ---
-        return LoanRequestUtils.mapLoanRequestListToOutput(activeLoans);
+        return activeLoans.stream()
+                .map(this::mapToDTO)
+                .toList();
+    }
+
+    private LoanRequestDTO mapToDTO(LoanRequest loan) {
+        List<RepaymentSchedule> schedules = repaymentScheduleRepository
+                .findByLoanRequest_RequestId(loan.getRequestId());
+
+        BigDecimal remaining = schedules.stream()
+                .map(s -> s.getAmountDue().subtract(
+                        s.getAmountPaid() != null ? s.getAmountPaid() : BigDecimal.ZERO))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalRepayable = schedules.stream()
+                .map(RepaymentSchedule::getAmountDue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return LoanRequestDTO.builder()
+                .requestId(loan.getRequestId())
+                .requestedAmount(loan.getRequestedAmount())
+                .description(loan.getDescription())
+                .purpose(loan.getPurpose())
+                .termMonths(loan.getTermMonths())
+                .interestRate(loan.getInterestRate())
+                .status(loan.getStatus())
+                .requestDate(loan.getRequestDate())
+                .deadLine(loan.getDeadLine())
+                .remainingAmount(remaining)
+                .totalRepayableAmount(totalRepayable)
+                .build();
     }
 
     // GET MY MARKETPLACE LOANS (BORROWER'S OWN LISTED LOANS)

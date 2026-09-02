@@ -7,16 +7,18 @@ import com.finance.loan.entity.User;
 import com.finance.loan.exception.OurException;
 import com.finance.loan.repo.PaymentAccountRepository;
 import com.finance.loan.repo.UserRepository;
-import com.finance.loan.service.interfac.IPayoutAccountService;
+import com.finance.loan.service.interfac.IPaymentAccountService;
 import com.finance.loan.utils.PaymentAccountUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
-public class PaymentAccountService implements IPayoutAccountService {
+public class PaymentAccountService implements IPaymentAccountService {
 
     @Autowired
     private PaymentAccountRepository payoutAccountRepository;
@@ -90,18 +92,19 @@ public class PaymentAccountService implements IPayoutAccountService {
     }
 
 
-    // GET PAYOUT METHOD
-    public PaymentAccountDTO getPayoutAccount(String email) {
+    // GET PAYMENT ACCOUNTS
+    public List<PaymentAccountDTO> getPaymentAccounts(String email) {
 
         // --- FETCH ---
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new OurException("User not found", 404));
 
-        PaymentAccount payoutAccount = payoutAccountRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new OurException("Payout Account not found", 404));
+        List<PaymentAccount> payoutAccounts = payoutAccountRepository.findAllByUserId(user.getId());
 
         // --- RETURN ---
-        return PaymentAccountUtils.mapEntityToOutput(payoutAccount);
+        return payoutAccounts.stream()
+                .map(PaymentAccountUtils::mapEntityToOutput)
+                .collect(Collectors.toList());
     }
 
 

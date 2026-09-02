@@ -1,6 +1,7 @@
 package com.finance.loan.dto.output;
 
 import com.finance.loan.entity.LoanStatus;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -12,11 +13,13 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class LoanRequestDTO {
 
     // Basic loan information
     private Long requestId;
     private BigDecimal requestedAmount;
+    private BigDecimal totalRepayableAmount;
     private String description;
     private String purpose;
     private Integer termMonths;

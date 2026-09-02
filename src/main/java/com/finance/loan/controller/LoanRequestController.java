@@ -137,7 +137,7 @@ public class LoanRequestController {
         return ResponseEntity.ok(repaymentScheduleService.getRepaymentScheduleByLoanRequest(loanRequestId));
     }
 
-    @GetMapping("/my-requests/{loanRequestId}/repayment-schedule/")
+    @GetMapping("/my-requests/{loanRequestId}/repayment-schedule")
     public ResponseEntity<List<RepaymentScheduleDTO>> getMyRepaymentSchedule(
             @PathVariable Long loanRequestId) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();

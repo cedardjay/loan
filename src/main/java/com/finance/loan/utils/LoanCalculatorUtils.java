@@ -32,28 +32,55 @@ public class LoanCalculatorUtils {
         BigDecimal totalInterest = principal
                 .multiply(annualRate)
                 .multiply(BigDecimal.valueOf(termMonths))
-                .divide(BigDecimal.valueOf(100 * 12), 2, RoundingMode.HALF_UP);
+                .divide(BigDecimal.valueOf(100 * 12), 0, RoundingMode.HALF_UP);
 
-        BigDecimal monthlyInstallment = principal.add(totalInterest)
-                .divide(BigDecimal.valueOf(termMonths), 2, RoundingMode.HALF_UP);
+        BigDecimal totalRepayable = principal.add(totalInterest);
 
+        // Base monthly figures, rounded to whole units
+        BigDecimal monthlyInstallment = totalRepayable
+                .divide(BigDecimal.valueOf(termMonths), 0, RoundingMode.HALF_UP);
         BigDecimal monthlyInterest = totalInterest
-                .divide(BigDecimal.valueOf(termMonths), 2, RoundingMode.HALF_UP);
-
+                .divide(BigDecimal.valueOf(termMonths), 0, RoundingMode.HALF_UP);
         BigDecimal monthlyPrincipal = principal
-                .divide(BigDecimal.valueOf(termMonths), 2, RoundingMode.HALF_UP);
+                .divide(BigDecimal.valueOf(termMonths), 0, RoundingMode.HALF_UP);
 
         List<RepaymentSchedule> schedules = new ArrayList<>();
         LocalDate dueDate = LocalDate.now().plusMonths(1);
 
+        BigDecimal runningTotalDue = BigDecimal.ZERO;
+        BigDecimal runningPrincipal = BigDecimal.ZERO;
+        BigDecimal runningInterest = BigDecimal.ZERO;
+
         for (int i = 1; i <= termMonths; i++) {
+            boolean isLast = (i == termMonths);
+
+            BigDecimal amountDue;
+            BigDecimal principalComponent;
+            BigDecimal interestComponent;
+
+            if (isLast) {
+                // Absorber: last installment takes whatever is left,
+                // so sum of all installments == totalRepayable exactly.
+                amountDue = totalRepayable.subtract(runningTotalDue);
+                principalComponent = principal.subtract(runningPrincipal);
+                interestComponent = totalInterest.subtract(runningInterest);
+            } else {
+                amountDue = monthlyInstallment;
+                principalComponent = monthlyPrincipal;
+                interestComponent = monthlyInterest;
+
+                runningTotalDue = runningTotalDue.add(amountDue);
+                runningPrincipal = runningPrincipal.add(principalComponent);
+                runningInterest = runningInterest.add(interestComponent);
+            }
+
             schedules.add(RepaymentSchedule.builder()
                     .loanRequest(loanRequest)
                     .installmentNumber(i)
                     .dueDate(dueDate)
-                    .amountDue(monthlyInstallment)
-                    .principalComponent(monthlyPrincipal)
-                    .interestComponent(monthlyInterest)
+                    .amountDue(amountDue)
+                    .principalComponent(principalComponent)
+                    .interestComponent(interestComponent)
                     .amountPaid(BigDecimal.ZERO)
                     .status(ScheduleStatus.PENDING)
                     .build());

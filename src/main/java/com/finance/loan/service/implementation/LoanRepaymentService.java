@@ -129,6 +129,8 @@ public class LoanRepaymentService implements ILoanRepaymentService {
         RepaymentSchedule schedule = tx.getRepaymentSchedule();
         schedule.setStatus(ScheduleStatus.PAID);
         schedule.setPaidDate(LocalDate.now());
+        schedule.setAmountPaid(tx.getAmount());
+        schedule.setTransaction(tx);
         repaymentScheduleRepository.save(schedule);
 
         boolean allPaid = repaymentScheduleRepository

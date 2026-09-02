@@ -12,13 +12,15 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
-@RequestMapping("/payout-accounts")
+@RequestMapping("/payment-accounts")
 public class PaymentAccountController {
 
     @Autowired
-    IPayoutAccountService payoutAccountService;
+    IPaymentAccountService payoutAccountService;
 
     // create PAYOUT Account
     @PostMapping
@@ -28,9 +30,9 @@ public class PaymentAccountController {
     }
 //get payout accounts
     @GetMapping
-    public ResponseEntity<PaymentAccountDTO> getPayoutAccount() {
+    public ResponseEntity<List<PaymentAccountDTO>> getPayoutAccount() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return ResponseEntity.ok(payoutAccountService.getPayoutAccount(email));
+        return ResponseEntity.ok(payoutAccountService.getPaymentAccounts(email));
     }
 
     @GetMapping("/default")

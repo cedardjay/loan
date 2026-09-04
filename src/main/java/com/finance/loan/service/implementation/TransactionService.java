@@ -108,7 +108,11 @@ public class TransactionService implements ITransactionService {
         Transaction tx = transactionRepository.findByPaymentReference(paymentReference)
                 .orElseThrow(() -> new OurException("Transaction not found", 404));
 
-        if (!tx.getReceiver().getId().equals(user.getId()) && !tx.getSender().getId().equals(user.getId())) {
+        boolean isParty = tx.getReceiver().getId().equals(user.getId())
+                || tx.getSender().getId().equals(user.getId());
+        boolean isAdmin = user.getRole() == Role.ADMIN || user.getRole() == Role.SUPERADMIN;
+
+        if (!isParty && !isAdmin) {
             throw new OurException("You do not have access to this transaction", 403);
         }
 

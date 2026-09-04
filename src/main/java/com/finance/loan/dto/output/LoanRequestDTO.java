@@ -1,6 +1,9 @@
 package com.finance.loan.dto.output;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.finance.loan.entity.LoanStatus;
+import com.finance.loan.entity.PaymentAccount;
+import com.finance.loan.entity.PaymentMethod;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,6 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class LoanRequestDTO {
 
     // Basic loan information
@@ -44,7 +48,12 @@ public class LoanRequestDTO {
 
     // Calculated fields (helpful for clients)
     private BigDecimal remainingAmount;  // requestedAmount - amountFunded
-    private Double fundingPercentage;    // (amountFunded / requestedAmount) * 100
+    private Double fundingPercentage;
+
+    // (amountFunded / requestedAmount) * 100
+
+   private PaymentAccountDTO paymentAccount; //account for disbursal
+
 
 
 }

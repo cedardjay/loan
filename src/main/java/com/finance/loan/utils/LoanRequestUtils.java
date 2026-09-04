@@ -1,7 +1,9 @@
 package com.finance.loan.utils;
 
 import com.finance.loan.dto.output.LoanRequestDTO;
+import com.finance.loan.dto.output.PaymentAccountDTO;
 import com.finance.loan.entity.LoanRequest;
+import com.finance.loan.entity.PaymentAccount;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -27,6 +29,17 @@ public class LoanRequestUtils {
         output.setStatus(loanRequest.getStatus());
         output.setRequestDate(loanRequest.getRequestDate());
         output.setDeadLine(loanRequest.getDeadLine());
+
+        // Payment account
+        PaymentAccount pa = loanRequest.getPaymentAccount();
+        if (pa != null) {
+            PaymentAccountDTO paDto = PaymentAccountDTO.builder()
+                    .id(pa.getId())
+                    .accountNumber(pa.getAccountNumber())
+                    .isDefault(pa.getIsDefault())
+                    .build();
+            output.setPaymentAccount(paDto);
+        }
 
         // Borrower info (handle lazy loading safely)
         if (loanRequest.getBorrower() != null) {
